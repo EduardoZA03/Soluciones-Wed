@@ -7,6 +7,10 @@ Esta es la versión reescrita en **Java web** (Servlets + JSP + JSTL) con
 **PostgreSQL**, lista para abrir en **Apache NetBeans**. La versión original
 estaba en JavaScript (Node.js + Express en el backend y React en el frontend).
 
+> 📘 **¿Primera vez?** Sigue la guía paso a paso
+> **[INSTALACION.md](INSTALACION.md)**: programas necesarios, base de datos,
+> NetBeans, Tomcat, tareas comunes con PostgreSQL y solución de problemas.
+
 ---
 
 ## Stack
@@ -65,7 +69,10 @@ CalSoft-Java/
 3. **Apache Tomcat 10.1** (NetBeans puede registrarlo; ver paso 3).
 4. **PostgreSQL** 14 o superior.
 
-## Puesta en marcha en NetBeans
+## Puesta en marcha en NetBeans (resumen)
+
+Versión corta. El paso a paso completo, con los menús exactos y los errores
+frecuentes, está en [INSTALACION.md](INSTALACION.md).
 
 ### 1. Configurar la base de datos
 
