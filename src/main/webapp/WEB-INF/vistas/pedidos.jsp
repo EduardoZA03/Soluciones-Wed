@@ -5,134 +5,130 @@
 <c:set var="activo" value="pedidos"/>
 <%@ include file="plantilla/cabecera.jspf" %>
 
-<div class="encabezado">
+<div class="d-flex flex-wrap justify-content-between align-items-end gap-3 mb-4">
     <div>
-        <h1>Pedidos</h1>
-        <p>Registro y seguimiento de pedidos</p>
+        <h1 class="h2 fw-bold mb-1">Pedidos</h1>
+        <p class="text-body-secondary mb-0">Registro y seguimiento de pedidos</p>
     </div>
-    <button type="button" class="btn btn-primary" data-abrir="modalPedido"><i data-lucide="plus"></i> Nuevo pedido</button>
+    <button type="button" class="btn btn-primary rounded-pill px-4" data-bs-toggle="modal" data-bs-target="#modalPedido">
+        <i class="bi bi-plus-lg me-1"></i>Nuevo pedido
+    </button>
 </div>
 
-<div class="pila">
-    <div class="grilla-stats">
-        <div class="card card-cuerpo stat">
-            <div class="fila"><span class="etiqueta">Total</span><span class="icono tono-brand"><i data-lucide="list-checks"></i></span></div>
-            <div class="valor">${total}</div>
-        </div>
-        <div class="card card-cuerpo stat">
-            <div class="fila"><span class="etiqueta">Pendientes</span><span class="icono tono-warning"><i data-lucide="clock"></i></span></div>
-            <div class="valor">${pendientes}</div>
-        </div>
-        <div class="card card-cuerpo stat">
-            <div class="fila"><span class="etiqueta">En cocina</span><span class="icono tono-info"><i data-lucide="chef-hat"></i></span></div>
-            <div class="valor">${enCocina}</div>
-        </div>
-        <div class="card card-cuerpo stat">
-            <div class="fila"><span class="etiqueta">Entregados</span><span class="icono tono-success"><i data-lucide="check-circle-2"></i></span></div>
-            <div class="valor">${entregados}</div>
-        </div>
-    </div>
+<div class="row g-3 mb-4">
+    <ui:stat etiqueta="Total" valor="${total}" icono="list-check" tono="primary"/>
+    <ui:stat etiqueta="Pendientes" valor="${pendientes}" icono="clock" tono="warning"/>
+    <ui:stat etiqueta="En cocina" valor="${enCocina}" icono="egg-fried" tono="info"/>
+    <ui:stat etiqueta="Entregados" valor="${entregados}" icono="check-circle" tono="success"/>
+</div>
 
-    <div class="chips">
-        <span class="titulo">Mesero:</span>
-        <a class="chip ${filtroMesero == 'Todos' ? 'activo' : ''}" href="${ctx}/pedidos">Todos</a>
-        <c:forEach var="m" items="${meseros}">
-            <c:url var="urlMesero" value="/pedidos"><c:param name="mesero" value="${m}"/></c:url>
-            <a class="chip ${filtroMesero == m ? 'activo' : ''}" href="${urlMesero}">${fn:escapeXml(m)}</a>
-        </c:forEach>
-    </div>
+<%-- Filtro por mesero --%>
+<div class="d-flex flex-wrap align-items-center gap-2 mb-3">
+    <span class="fw-medium text-body-secondary me-1">Mesero:</span>
+    <a class="btn btn-sm rounded-pill ${filtroMesero == 'Todos' ? 'btn-primary' : 'btn-outline-secondary'}" href="${ctx}/pedidos">Todos</a>
+    <c:forEach var="m" items="${meseros}">
+        <c:url var="urlMesero" value="/pedidos"><c:param name="mesero" value="${m}"/></c:url>
+        <a class="btn btn-sm rounded-pill ${filtroMesero == m ? 'btn-primary' : 'btn-outline-secondary'}" href="${urlMesero}">${fn:escapeXml(m)}</a>
+    </c:forEach>
+</div>
 
-    <div class="card tabla-envoltura">
-        <table class="tabla">
+<div class="card">
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
             <thead>
                 <tr>
-                    <th>#</th><th>Cliente</th><th>Mesero</th><th>Producto</th>
-                    <th>Cant.</th><th>Mesa</th><th>Estado</th><th class="derecha">Acciones</th>
+                    <th class="ps-4">#</th><th>Cliente</th><th>Mesero</th><th>Producto</th>
+                    <th>Cant.</th><th>Mesa</th><th>Estado</th><th class="text-end pe-4">Acciones</th>
                 </tr>
             </thead>
             <tbody>
                 <c:forEach var="p" items="${pedidos}" varStatus="i">
                     <tr>
-                        <td class="tenue">${i.count}</td>
-                        <td class="fuerte">${fn:escapeXml(p.cliente)}</td>
+                        <td class="ps-4 text-body-tertiary">${i.count}</td>
+                        <td class="fw-medium">${fn:escapeXml(p.cliente)}</td>
                         <td>${fn:escapeXml(p.mesero)}</td>
                         <td>${fn:escapeXml(p.producto)}</td>
                         <td>${p.cantidad}</td>
                         <td>${p.mesa}</td>
-                        <td><span class="badge badge-${p.tono}">${p.estado}</span></td>
-                        <td>
-                            <div class="acciones">
-                                <form method="post" action="${ctx}/pedidos">
+                        <td><span class="badge rounded-pill bg-${p.tono}-subtle text-${p.tono}-emphasis">${p.estado}</span></td>
+                        <td class="pe-4">
+                            <div class="d-flex justify-content-end gap-2">
+                                <form method="post" action="${ctx}/pedidos" class="m-0">
                                     <input type="hidden" name="csrf" value="${sessionScope.csrf}">
                                     <input type="hidden" name="accion" value="cambiar">
                                     <input type="hidden" name="id" value="${p.id}">
                                     <input type="hidden" name="filtroMesero" value="${fn:escapeXml(filtroMesero)}">
-                                    <button type="submit" class="btn btn-sm btn-secondary">Cambiar</button>
+                                    <button type="submit" class="btn btn-sm btn-outline-secondary rounded-pill">Cambiar</button>
                                 </form>
-                                <form method="post" action="${ctx}/pedidos"
+                                <form method="post" action="${ctx}/pedidos" class="m-0"
                                       data-confirmar="¿Eliminar el pedido de ${fn:escapeXml(p.cliente)}?">
                                     <input type="hidden" name="csrf" value="${sessionScope.csrf}">
                                     <input type="hidden" name="accion" value="eliminar">
                                     <input type="hidden" name="id" value="${p.id}">
                                     <input type="hidden" name="filtroMesero" value="${fn:escapeXml(filtroMesero)}">
-                                    <button type="submit" class="btn btn-sm btn-danger">Eliminar</button>
+                                    <button type="submit" class="btn btn-sm btn-danger rounded-pill">Eliminar</button>
                                 </form>
                             </div>
                         </td>
                     </tr>
                 </c:forEach>
                 <c:if test="${empty pedidos}">
-                    <tr><td colspan="8" class="vacio">No hay pedidos registrados.</td></tr>
+                    <tr><td colspan="8" class="text-center text-body-secondary py-5">No hay pedidos registrados.</td></tr>
                 </c:if>
             </tbody>
         </table>
     </div>
 </div>
 
-<dialog class="modal" id="modalPedido">
-    <div class="modal-cabecera">
-        <h3>Nuevo pedido</h3>
-        <button type="button" class="btn-icono" data-cerrar aria-label="Cerrar"><i data-lucide="x"></i></button>
-    </div>
-    <div class="modal-cuerpo">
-        <form method="post" action="${ctx}/pedidos" class="form-pila">
-            <input type="hidden" name="csrf" value="${sessionScope.csrf}">
-            <input type="hidden" name="accion" value="crear">
-            <input type="hidden" name="filtroMesero" value="${fn:escapeXml(filtroMesero)}">
-            <div class="campo">
-                <label for="cliente">Cliente</label>
-                <input class="input" id="cliente" name="cliente" placeholder="Nombre del cliente" maxlength="100" required>
-            </div>
-            <div class="campo">
-                <label for="mesero">Mesero</label>
-                <input class="input" id="mesero" name="mesero" placeholder="Nombre del mesero" maxlength="100" required>
-            </div>
-            <div class="campo">
-                <label for="producto">Producto</label>
-                <input class="input" id="producto" name="producto" placeholder="Producto" maxlength="100" required>
-            </div>
-            <div class="dos-col">
-                <div class="campo">
-                    <label for="cantidad">Cantidad</label>
-                    <input class="input" id="cantidad" name="cantidad" type="number" min="1" placeholder="Ej. 2" required>
+<%-- Modal: nuevo pedido --%>
+<div class="modal fade" id="modalPedido" tabindex="-1" aria-labelledby="tituloPedido" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <form method="post" action="${ctx}/pedidos">
+                <div class="modal-header border-0 pb-0">
+                    <h5 class="modal-title fw-semibold" id="tituloPedido">Nuevo pedido</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
                 </div>
-                <div class="campo">
-                    <label for="mesa">Mesa</label>
-                    <input class="input" id="mesa" name="mesa" type="number" min="1" placeholder="Ej. 4" required>
+                <div class="modal-body">
+                    <input type="hidden" name="csrf" value="${sessionScope.csrf}">
+                    <input type="hidden" name="accion" value="crear">
+                    <input type="hidden" name="filtroMesero" value="${fn:escapeXml(filtroMesero)}">
+                    <div class="row g-3">
+                        <div class="col-12">
+                            <label for="cliente" class="form-label">Cliente</label>
+                            <input class="form-control" id="cliente" name="cliente" placeholder="Nombre del cliente" maxlength="100" required>
+                        </div>
+                        <div class="col-12">
+                            <label for="mesero" class="form-label">Mesero</label>
+                            <input class="form-control" id="mesero" name="mesero" placeholder="Nombre del mesero" maxlength="100" required>
+                        </div>
+                        <div class="col-12">
+                            <label for="producto" class="form-label">Producto</label>
+                            <input class="form-control" id="producto" name="producto" placeholder="Producto" maxlength="100" required>
+                        </div>
+                        <div class="col-6">
+                            <label for="cantidad" class="form-label">Cantidad</label>
+                            <input class="form-control" id="cantidad" name="cantidad" type="number" min="1" placeholder="Ej. 2" required>
+                        </div>
+                        <div class="col-6">
+                            <label for="mesa" class="form-label">Mesa</label>
+                            <input class="form-control" id="mesa" name="mesa" type="number" min="1" placeholder="Ej. 4" required>
+                        </div>
+                        <div class="col-12">
+                            <label for="estado" class="form-label">Estado</label>
+                            <select class="form-select" id="estado" name="estado">
+                                <c:forEach var="e" items="${estados}"><option value="${e}">${e}</option></c:forEach>
+                            </select>
+                        </div>
+                    </div>
                 </div>
-            </div>
-            <div class="campo">
-                <label for="estado">Estado</label>
-                <select class="select" id="estado" name="estado">
-                    <c:forEach var="e" items="${estados}"><option value="${e}">${e}</option></c:forEach>
-                </select>
-            </div>
-            <div class="botones-form">
-                <button type="button" class="btn btn-outline btn-full" data-cerrar>Cancelar</button>
-                <button type="submit" class="btn btn-primary btn-full">Registrar</button>
-            </div>
-        </form>
+                <div class="modal-footer border-0 pt-0">
+                    <button type="button" class="btn btn-outline-secondary rounded-pill px-4" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary rounded-pill px-4">Registrar</button>
+                </div>
+            </form>
+        </div>
     </div>
-</dialog>
+</div>
 
 <%@ include file="plantilla/pie.jspf" %>

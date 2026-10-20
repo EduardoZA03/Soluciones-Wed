@@ -1,9 +1,11 @@
 <%--
-    Cabecera común de las páginas privadas: <head>, barra lateral y mensajes flash.
+    Cabecera común de las páginas privadas: <head>, menú lateral y mensajes flash.
     Antes de incluirla, la página define:  titulo  y  activo  (clave del menú).
+    El menú es un "offcanvas" de Bootstrap: fijo en escritorio, deslizable en móvil.
 --%>
 <%@ taglib prefix="c" uri="jakarta.tags.core" %>
 <%@ taglib prefix="fn" uri="jakarta.tags.functions" %>
+<%@ taglib prefix="ui" tagdir="/WEB-INF/tags" %>
 <c:set var="ctx" value="${pageContext.request.contextPath}"/>
 <!DOCTYPE html>
 <html lang="es">
@@ -12,65 +14,82 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>${titulo} · CalSoft</title>
     <link rel="icon" href="${ctx}/img/logo.png">
+    <link rel="stylesheet" href="${ctx}/webjars/bootstrap/5.3.3/css/bootstrap.min.css">
+    <link rel="stylesheet" href="${ctx}/webjars/bootstrap-icons/1.11.3/font/bootstrap-icons.min.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@500;600;700;800&family=Caveat:wght@600;700&display=swap">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@500;600;700;800&display=swap">
     <link rel="stylesheet" href="${ctx}/css/estilos.css">
-    <script src="https://unpkg.com/lucide@0.344.0/dist/umd/lucide.min.js" defer></script>
-    <script src="${ctx}/js/app.js" defer></script>
 </head>
 <body>
 
-<header class="topbar">
+<%-- Barra superior (solo móvil) --%>
+<header class="topbar d-lg-none sticky-top border-bottom d-flex align-items-center justify-content-between px-3">
     <div class="marca">
         <img src="${ctx}/img/logo.png" alt="">
-        <span class="marca-nombre">CalSoft</span>
+        <span class="marca-nombre fs-5">CalSoft</span>
     </div>
-    <button type="button" class="btn-icono" data-menu aria-label="Abrir menú"><i data-lucide="menu"></i></button>
+    <button type="button" class="btn btn-light" data-bs-toggle="offcanvas" data-bs-target="#menu" aria-label="Abrir menú">
+        <i class="bi bi-list fs-5"></i>
+    </button>
 </header>
-<div class="fondo-menu" data-menu></div>
 
-<aside class="sidebar">
-    <div class="marca">
-        <img src="${ctx}/img/logo.png" alt="CalSoft">
-        <div>
-            <div class="marca-nombre">CalSoft</div>
-            <div class="marca-sub">Sistema POS</div>
-        </div>
+<%-- Menú lateral --%>
+<aside class="offcanvas-lg offcanvas-start sidebar" tabindex="-1" id="menu" aria-label="Menú principal">
+    <div class="offcanvas-header border-bottom">
+        <span class="marca-nombre">Menú</span>
+        <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#menu" aria-label="Cerrar"></button>
     </div>
-
-    <nav class="nav">
-        <a href="${ctx}/dashboard" class="${activo == 'dashboard' ? 'activo' : ''}"><i data-lucide="layout-dashboard"></i>Inicio</a>
-        <a href="${ctx}/pedidos" class="${activo == 'pedidos' ? 'activo' : ''}"><i data-lucide="clipboard-list"></i>Pedidos</a>
-        <a href="${ctx}/reservas" class="${activo == 'reservas' ? 'activo' : ''}"><i data-lucide="calendar"></i>Reservas</a>
-        <a href="${ctx}/inventario" class="${activo == 'inventario' ? 'activo' : ''}"><i data-lucide="package"></i>Inventario</a>
-        <a href="${ctx}/cocina" class="${activo == 'cocina' ? 'activo' : ''}"><i data-lucide="chef-hat"></i>Cocina</a>
-        <a href="${ctx}/usuarios" class="${activo == 'usuarios' ? 'activo' : ''}"><i data-lucide="users"></i>Usuarios</a>
-        <a href="${ctx}/reportes" class="${activo == 'reportes' ? 'activo' : ''}"><i data-lucide="bar-chart-3"></i>Reportes</a>
-    </nav>
-
-    <div class="tarjeta-usuario">
-        <div class="fila">
-            <div class="avatar">${fn:escapeXml(fn:toUpperCase(fn:substring(sessionScope.usuario.usuario, 0, 1)))}</div>
-            <div class="datos">
-                <div class="nombre">${fn:escapeXml(sessionScope.usuario.usuario)}</div>
-                <div class="rol">${fn:escapeXml(sessionScope.usuario.rol)}</div>
+    <div class="offcanvas-body d-flex flex-column p-0">
+        <div class="marca px-4 py-3 border-bottom">
+            <img src="${ctx}/img/logo.png" alt="CalSoft">
+            <div>
+                <div class="marca-nombre">CalSoft</div>
+                <div class="marca-sub">Sistema POS</div>
             </div>
-            <form method="post" action="${ctx}/logout">
-                <input type="hidden" name="csrf" value="${sessionScope.csrf}">
-                <button type="submit" class="btn-icono" title="Cerrar sesión" aria-label="Cerrar sesión"><i data-lucide="log-out"></i></button>
-            </form>
+        </div>
+
+        <nav class="nav flex-column gap-1 p-3 flex-grow-1">
+            <a class="nav-link ${activo == 'dashboard' ? 'active' : ''}" href="${ctx}/dashboard"><i class="bi bi-grid-1x2"></i>Inicio</a>
+            <a class="nav-link ${activo == 'pedidos' ? 'active' : ''}" href="${ctx}/pedidos"><i class="bi bi-clipboard-check"></i>Pedidos</a>
+            <a class="nav-link ${activo == 'reservas' ? 'active' : ''}" href="${ctx}/reservas"><i class="bi bi-calendar-event"></i>Reservas</a>
+            <a class="nav-link ${activo == 'inventario' ? 'active' : ''}" href="${ctx}/inventario"><i class="bi bi-box-seam"></i>Inventario</a>
+            <a class="nav-link ${activo == 'cocina' ? 'active' : ''}" href="${ctx}/cocina"><i class="bi bi-egg-fried"></i>Cocina</a>
+            <a class="nav-link ${activo == 'usuarios' ? 'active' : ''}" href="${ctx}/usuarios"><i class="bi bi-people"></i>Usuarios</a>
+            <a class="nav-link ${activo == 'reportes' ? 'active' : ''}" href="${ctx}/reportes"><i class="bi bi-bar-chart-line"></i>Reportes</a>
+        </nav>
+
+        <div class="border-top p-3">
+            <div class="d-flex align-items-center gap-3 px-2">
+                <div class="avatar">${fn:escapeXml(fn:toUpperCase(fn:substring(sessionScope.usuario.usuario, 0, 1)))}</div>
+                <div class="flex-grow-1 lh-sm text-truncate">
+                    <div class="fw-medium text-truncate">${fn:escapeXml(sessionScope.usuario.usuario)}</div>
+                    <div class="small text-body-secondary">${fn:escapeXml(sessionScope.usuario.rol)}</div>
+                </div>
+                <form method="post" action="${ctx}/logout" class="m-0">
+                    <input type="hidden" name="csrf" value="${sessionScope.csrf}">
+                    <button type="submit" class="btn btn-sm btn-light" title="Cerrar sesión" aria-label="Cerrar sesión">
+                        <i class="bi bi-box-arrow-right"></i>
+                    </button>
+                </form>
+            </div>
         </div>
     </div>
 </aside>
 
 <main class="contenido">
-<div class="contenedor">
+<div class="container-xl px-3 px-lg-5 py-4 py-lg-5">
 
 <c:if test="${not empty sessionScope.flashError}">
-    <div class="alerta alerta-error">${fn:escapeXml(sessionScope.flashError)}</div>
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        <i class="bi bi-exclamation-circle me-1"></i>${fn:escapeXml(sessionScope.flashError)}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Cerrar"></button>
+    </div>
     <c:remove var="flashError" scope="session"/>
 </c:if>
 <c:if test="${not empty sessionScope.flashExito}">
-    <div class="alerta alerta-exito">${fn:escapeXml(sessionScope.flashExito)}</div>
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        <i class="bi bi-check-circle me-1"></i>${fn:escapeXml(sessionScope.flashExito)}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Cerrar"></button>
+    </div>
     <c:remove var="flashExito" scope="session"/>
 </c:if>

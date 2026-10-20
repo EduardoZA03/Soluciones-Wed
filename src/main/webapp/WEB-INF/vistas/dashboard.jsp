@@ -5,85 +5,81 @@
 <c:set var="activo" value="dashboard"/>
 <%@ include file="plantilla/cabecera.jspf" %>
 
-<div class="encabezado">
-    <div>
-        <h1>Inicio</h1>
-        <p>Resumen general del restaurante</p>
-    </div>
+<div class="mb-4">
+    <h1 class="h2 fw-bold mb-1">Inicio</h1>
+    <p class="text-body-secondary mb-0">Resumen general del restaurante</p>
 </div>
 
-<div class="pila">
-    <div class="grilla-stats">
-        <div class="card card-cuerpo stat">
-            <div class="fila"><span class="etiqueta">Pedidos activos</span><span class="icono tono-brand"><i data-lucide="list-checks"></i></span></div>
-            <div class="valor">${empty stats ? '—' : stats.pedidosActivos}</div>
-            <c:if test="${not empty stats}"><div class="sub">${stats.pedidosTotal} en total</div></c:if>
-        </div>
-        <div class="card card-cuerpo stat">
-            <div class="fila"><span class="etiqueta">Reservas pendientes</span><span class="icono tono-warning"><i data-lucide="calendar-clock"></i></span></div>
-            <div class="valor">${empty stats ? '—' : stats.reservasPendientes}</div>
-            <c:if test="${not empty stats}"><div class="sub">${stats.reservasConfirmadas} confirmadas</div></c:if>
-        </div>
-        <div class="card card-cuerpo stat">
-            <div class="fila"><span class="etiqueta">Bajo stock</span><span class="icono tono-danger"><i data-lucide="alert-triangle"></i></span></div>
-            <div class="valor">${empty stats ? '—' : stats.bajoStock}</div>
-            <c:if test="${not empty stats}"><div class="sub">${stats.productosTotal} productos</div></c:if>
-        </div>
-        <div class="card card-cuerpo stat">
-            <div class="fila"><span class="etiqueta">Valor inventario</span><span class="icono tono-success"><i data-lucide="wallet"></i></span></div>
-            <div class="valor">${empty stats ? '—' : 'S/ '.concat(stats.valorInventarioEntero)}</div>
+<div class="row g-3 mb-4">
+    <ui:stat etiqueta="Pedidos activos" icono="list-check" tono="primary"
+             valor="${empty stats ? '—' : stats.pedidosActivos}"
+             sub="${empty stats ? '' : stats.pedidosTotal += ' en total'}"/>
+    <ui:stat etiqueta="Reservas pendientes" icono="calendar-week" tono="warning"
+             valor="${empty stats ? '—' : stats.reservasPendientes}"
+             sub="${empty stats ? '' : stats.reservasConfirmadas += ' confirmadas'}"/>
+    <ui:stat etiqueta="Bajo stock" icono="exclamation-triangle" tono="danger"
+             valor="${empty stats ? '—' : stats.bajoStock}"
+             sub="${empty stats ? '' : stats.productosTotal += ' productos'}"/>
+    <ui:stat etiqueta="Valor inventario" icono="wallet2" tono="success"
+             valor="${empty stats ? '—' : 'S/ ' += stats.valorInventarioEntero}"/>
+</div>
+
+<div class="row g-4">
+    <div class="col-lg-6">
+        <div class="card h-100">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h2 class="titulo-seccion mb-0">Pedidos recientes</h2>
+                    <a class="small fw-medium link-secondary text-decoration-none" href="${ctx}/pedidos">Ver todos →</a>
+                </div>
+                <c:choose>
+                    <c:when test="${empty pedidosRecientes}">
+                        <div class="bg-body-tertiary rounded-3 text-center text-body-secondary py-4">No hay pedidos.</div>
+                    </c:when>
+                    <c:otherwise>
+                        <ul class="list-group gap-2">
+                            <c:forEach var="p" items="${pedidosRecientes}">
+                                <li class="list-group-item border rounded-3 d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <div class="fw-medium">${fn:escapeXml(p.producto)} × ${p.cantidad}</div>
+                                        <div class="small text-body-secondary">${fn:escapeXml(p.cliente)} · Mesa ${p.mesa}</div>
+                                    </div>
+                                    <span class="badge rounded-pill bg-${p.tono}-subtle text-${p.tono}-emphasis">${p.estado}</span>
+                                </li>
+                            </c:forEach>
+                        </ul>
+                    </c:otherwise>
+                </c:choose>
+            </div>
         </div>
     </div>
 
-    <div class="grilla-2">
-        <div class="card card-cuerpo">
-            <div class="card-cabecera">
-                <h2>Pedidos recientes</h2>
-                <a class="ver-todos" href="${ctx}/pedidos">Ver todos →</a>
+    <div class="col-lg-6">
+        <div class="card h-100">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h2 class="titulo-seccion mb-0">Próximas reservas</h2>
+                    <a class="small fw-medium link-secondary text-decoration-none" href="${ctx}/reservas">Ver todos →</a>
+                </div>
+                <c:choose>
+                    <c:when test="${empty reservasProximas}">
+                        <div class="bg-body-tertiary rounded-3 text-center text-body-secondary py-4">Sin reservas próximas.</div>
+                    </c:when>
+                    <c:otherwise>
+                        <ul class="list-group gap-2">
+                            <c:forEach var="r" items="${reservasProximas}">
+                                <li class="list-group-item border rounded-3 d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <div class="fw-medium">${fn:escapeXml(r.cliente)}</div>
+                                        <div class="small text-body-secondary">${r.fechaTexto} · ${r.horaTexto} · ${r.personas} pers · Mesa ${r.mesa}</div>
+                                    </div>
+                                    <span class="badge rounded-pill bg-${r.tono}-subtle text-${r.tono}-emphasis">${r.estado}</span>
+                                </li>
+                            </c:forEach>
+                        </ul>
+                    </c:otherwise>
+                </c:choose>
             </div>
-            <c:choose>
-                <c:when test="${empty pedidosRecientes}">
-                    <div class="caja-vacia">No hay pedidos.</div>
-                </c:when>
-                <c:otherwise>
-                    <ul class="lista">
-                        <c:forEach var="p" items="${pedidosRecientes}">
-                            <li class="item">
-                                <div>
-                                    <div class="item-titulo">${fn:escapeXml(p.producto)} × ${p.cantidad}</div>
-                                    <div class="item-sub">${fn:escapeXml(p.cliente)} · Mesa ${p.mesa}</div>
-                                </div>
-                                <span class="badge badge-${p.tono}">${p.estado}</span>
-                            </li>
-                        </c:forEach>
-                    </ul>
-                </c:otherwise>
-            </c:choose>
-        </div>
-
-        <div class="card card-cuerpo">
-            <div class="card-cabecera">
-                <h2>Próximas reservas</h2>
-                <a class="ver-todos" href="${ctx}/reservas">Ver todos →</a>
-            </div>
-            <c:choose>
-                <c:when test="${empty reservasProximas}">
-                    <div class="caja-vacia">Sin reservas próximas.</div>
-                </c:when>
-                <c:otherwise>
-                    <ul class="lista">
-                        <c:forEach var="r" items="${reservasProximas}">
-                            <li class="item">
-                                <div>
-                                    <div class="item-titulo">${fn:escapeXml(r.cliente)}</div>
-                                    <div class="item-sub">${r.fechaTexto} · ${r.horaTexto} · ${r.personas} pers · Mesa ${r.mesa}</div>
-                                </div>
-                                <span class="badge badge-${r.tono}">${r.estado}</span>
-                            </li>
-                        </c:forEach>
-                    </ul>
-                </c:otherwise>
-            </c:choose>
         </div>
     </div>
 </div>

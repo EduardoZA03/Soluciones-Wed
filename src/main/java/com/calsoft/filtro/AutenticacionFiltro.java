@@ -56,6 +56,7 @@ public class AutenticacionFiltro extends HttpFilter {
                 || ruta.startsWith("/css/")
                 || ruta.startsWith("/js/")
                 || ruta.startsWith("/img/")
+                || ruta.startsWith("/webjars/")
                 || ruta.equals("/favicon.ico");
     }
 }

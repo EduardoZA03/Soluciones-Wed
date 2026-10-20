@@ -17,7 +17,7 @@ estaba en JavaScript (Node.js + Express en el backend y React en el frontend).
 
 | Capa       | Tecnología                                         |
 |------------|----------------------------------------------------|
-| Vistas     | JSP + JSTL, CSS propio, íconos lucide              |
+| Vistas     | JSP + JSTL, **Bootstrap 5.3** + Bootstrap Icons (WebJars, sin CDN) |
 | Lógica     | Servlets (Jakarta EE 10), patrón MVC + DAO         |
 | Datos      | PostgreSQL vía JDBC (consultas parametrizadas)     |
 | Seguridad  | Contraseñas con **BCrypt**, sesión HTTP + filtro, token CSRF |
@@ -45,10 +45,29 @@ CalSoft-Java/
     └── webapp/
         ├── WEB-INF/web.xml
         ├── WEB-INF/vistas/   → páginas JSP (no accesibles directamente)
-        ├── css/estilos.css
-        ├── js/app.js
+        │   └── plantilla/    → cabecera (menú lateral) y pie comunes
+        ├── WEB-INF/tags/     → componentes JSP reutilizables (stat.tag)
+        ├── css/estilos.css   → colores de la marca sobre Bootstrap
+        ├── js/app.js         → comportamiento de la interfaz (modales, confirmaciones)
         └── img/logo.png
 ```
+
+### Separación por capas
+
+Cada cosa vive en su propia carpeta y no se mezclan:
+
+| Capa | Dónde | Contiene |
+|------|-------|----------|
+| **Programación (lógica)** | `src/main/java` | Servlets, DAO, modelos, validación, seguridad |
+| **Datos** | `src/main/resources` | `schema.sql`, configuración de conexión |
+| **Vistas (estructura HTML)** | `src/main/webapp/WEB-INF/vistas` | Páginas JSP, sin SQL ni lógica de negocio |
+| **Diseño** | `src/main/webapp/css` + Bootstrap | Estilos; Bootstrap llega por Maven (`pom.xml`) |
+| **Comportamiento** | `src/main/webapp/js` | JavaScript de la interfaz (no accede a datos) |
+| **Imágenes** | `src/main/webapp/img` | Logo e imágenes |
+
+Las JSP no tienen bloques `<style>` ni `<script>` propios: los estilos van en
+`estilos.css` y el JS en `app.js`. La única excepción es el ancho de las barras
+de Reportes, que Bootstrap define con `style="width: …%"`.
 
 | Proyecto original (JS)               | Equivalente en Java                         |
 |--------------------------------------|---------------------------------------------|
@@ -58,7 +77,8 @@ CalSoft-Java/
 | `.env` / `.env.example`              | `resources/db.properties` / `.example`      |
 | `npm run seed`                       | `config/InicializadorBD.java` (automático)  |
 | `frontend/src/pages/*.jsx`           | `webapp/WEB-INF/vistas/*.jsp`               |
-| Tailwind CSS                         | `webapp/css/estilos.css`                    |
+| Tailwind CSS                         | Bootstrap 5 + `webapp/css/estilos.css`      |
+| `components/ui/StatCard.jsx`         | `WEB-INF/tags/stat.tag`                     |
 
 ---
 

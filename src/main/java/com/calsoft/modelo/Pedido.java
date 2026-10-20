@@ -77,7 +77,7 @@ public class Pedido {
         this.estado = estado;
     }
 
-    /** Tono del badge según el estado (usado por las vistas). */
+    /** Color de Bootstrap del badge según el estado (usado por las vistas). */
     public String getTono() {
         switch (estado) {
             case "Entregado":

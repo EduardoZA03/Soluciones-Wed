@@ -1,5 +1,7 @@
-<%-- Cierre común de las páginas privadas. --%>
+<%-- Cierre común de las páginas privadas: scripts de Bootstrap y de la app. --%>
 </div>
 </main>
+<script src="${ctx}/webjars/bootstrap/5.3.3/js/bootstrap.bundle.min.js"></script>
+<script src="${ctx}/js/app.js"></script>
 </body>
 </html>

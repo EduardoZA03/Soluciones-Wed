@@ -1,63 +1,49 @@
-// Comportamiento de la interfaz: íconos, menú móvil, modales y confirmaciones.
+// Comportamiento de la interfaz sobre Bootstrap 5: rellenar modales,
+// confirmaciones y selects que guardan solos.
 // Todo el trabajo con datos lo hacen los servlets; aquí solo hay UI.
-document.addEventListener('DOMContentLoaded', function () {
-    // Íconos lucide (<i data-lucide="nombre">)
-    if (window.lucide) {
-        window.lucide.createIcons();
-    }
+(function () {
+    'use strict';
 
-    // Menú lateral en móvil
-    document.querySelectorAll('[data-menu]').forEach(function (el) {
-        el.addEventListener('click', function () {
-            document.body.classList.toggle('menu-abierto');
-        });
-    });
-
-    // Abrir un modal: <button data-abrir="idDelDialog">
-    // Los atributos data-campo-xxx rellenan el campo "xxx" del formulario del modal.
-    document.querySelectorAll('[data-abrir]').forEach(function (btn) {
-        btn.addEventListener('click', function () {
-            var modal = document.getElementById(btn.dataset.abrir);
+    // Al abrir un modal con un botón (data-bs-toggle="modal"):
+    //  - data-limpiar        → vacía el formulario (modo "nuevo")
+    //  - data-campo-xxx="v"  → pone v en el campo "xxx" (modo "editar")
+    //  - data-titulo / data-boton → cambia el título y el texto del botón
+    document.querySelectorAll('.modal').forEach(function (modal) {
+        modal.addEventListener('show.bs.modal', function (e) {
+            var btn = e.relatedTarget;
             var form = modal.querySelector('form');
+            if (!btn || !form) {
+                return;
+            }
             if (btn.hasAttribute('data-limpiar')) {
                 form.reset();
-                form.querySelectorAll('input[type=hidden][data-limpiable]').forEach(function (h) { h.value = ''; });
+                form.querySelectorAll('input[data-limpiable]').forEach(function (h) { h.value = ''; });
             }
             Object.keys(btn.dataset).forEach(function (clave) {
-                if (clave.indexOf('campo') === 0) {
-                    var nombre = clave.substring(5).replace(/^./, function (c) { return c.toLowerCase(); })
-                        .replace(/[A-Z]/g, function (c) { return '_' + c.toLowerCase(); });
-                    var campo = form.elements[nombre];
-                    if (campo) {
-                        campo.value = btn.dataset[clave];
-                    }
+                if (clave.indexOf('campo') !== 0) {
+                    return;
+                }
+                // campoStockMinimo → stock_minimo
+                var nombre = clave.substring(5)
+                    .replace(/^./, function (c) { return c.toLowerCase(); })
+                    .replace(/[A-Z]/g, function (c) { return '_' + c.toLowerCase(); });
+                if (form.elements[nombre]) {
+                    form.elements[nombre].value = btn.dataset[clave];
                 }
             });
             if (btn.dataset.titulo) {
-                modal.querySelector('[data-titulo-modal]').textContent = btn.dataset.titulo;
+                modal.querySelector('.modal-title').textContent = btn.dataset.titulo;
             }
             if (btn.dataset.boton) {
-                modal.querySelector('[data-boton-modal]').textContent = btn.dataset.boton;
+                modal.querySelector('[type=submit]').textContent = btn.dataset.boton;
             }
-            modal.showModal();
-            var primero = form.querySelector('input:not([type=hidden]), select');
+        });
+
+        // Pone el cursor en el primer campo cuando el modal ya se ve
+        modal.addEventListener('shown.bs.modal', function () {
+            var primero = modal.querySelector('input:not([type=hidden]), select');
             if (primero) {
                 primero.focus();
-            }
-        });
-    });
-
-    document.querySelectorAll('[data-cerrar]').forEach(function (btn) {
-        btn.addEventListener('click', function () {
-            btn.closest('dialog').close();
-        });
-    });
-
-    // Cerrar el modal al hacer clic fuera de él
-    document.querySelectorAll('dialog.modal').forEach(function (d) {
-        d.addEventListener('click', function (e) {
-            if (e.target === d) {
-                d.close();
             }
         });
     });
@@ -77,4 +63,4 @@ document.addEventListener('DOMContentLoaded', function () {
             sel.form.submit();
         });
     });
-});
+})();

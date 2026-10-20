@@ -186,8 +186,9 @@ archivo: `PGHOST`, `PGPORT`, `PGDATABASE`, `PGUSER`, `PGPASSWORD`.
 1. Abre NetBeans → **File → Open Project…**
 2. Selecciona la carpeta del proyecto (la que contiene `pom.xml`).
    Debe aparecer con el ícono de taza ☕ (proyecto Maven).
-3. **Open Project**. La primera vez NetBeans descarga las dependencias
-   (necesita internet; tarda 1–2 minutos).
+3. **Open Project**. La primera vez NetBeans descarga las dependencias,
+   incluidos Bootstrap y sus íconos (necesita internet; tarda 1–2 minutos).
+   Después la app funciona sin conexión.
 4. Para comprobar que compila: clic derecho en el proyecto → **Clean and Build**.
    Debe terminar en **BUILD SUCCESS**.
 

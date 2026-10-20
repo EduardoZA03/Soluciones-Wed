@@ -39,6 +39,14 @@
             <scope>provided</scope>
         </dependency>
 
+        <!-- EL ya viene en Tomcat; se declara "provided" para que la JSTL no la meta en el .war -->
+        <dependency>
+            <groupId>jakarta.el</groupId>
+            <artifactId>jakarta.el-api</artifactId>
+            <version>5.0.0</version>
+            <scope>provided</scope>
+        </dependency>
+
         <!-- JSTL (etiquetas c:forEach, c:if, etc.). Tomcat no la incluye. -->
         <dependency>
             <groupId>jakarta.servlet.jsp.jstl</groupId>
@@ -56,6 +64,22 @@
             <groupId>org.postgresql</groupId>
             <artifactId>postgresql</artifactId>
             <version>42.7.4</version>
+        </dependency>
+
+        <!--
+            Bootstrap 5 e íconos Bootstrap como WebJars: Maven los descarga y
+            van dentro del .war, así la interfaz funciona sin internet.
+            Se sirven en /webjars/bootstrap/... y /webjars/bootstrap-icons/...
+        -->
+        <dependency>
+            <groupId>org.webjars</groupId>
+            <artifactId>bootstrap</artifactId>
+            <version>5.3.3</version>
+        </dependency>
+        <dependency>
+            <groupId>org.webjars.npm</groupId>
+            <artifactId>bootstrap-icons</artifactId>
+            <version>1.11.3</version>
         </dependency>
 
         <!-- Hash de contraseñas con BCrypt -->

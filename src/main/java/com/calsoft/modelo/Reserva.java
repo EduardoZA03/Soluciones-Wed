@@ -93,13 +93,13 @@ public class Reserva {
         return hora == null ? "" : hora.format(HORA);
     }
 
-    /** Tono del badge según el estado (usado por las vistas). */
+    /** Color de Bootstrap del badge según el estado (usado por las vistas). */
     public String getTono() {
         switch (estado) {
             case "Confirmada":
                 return "success";
             case "Cancelada":
-                return "neutral";
+                return "secondary";
             default:
                 return "warning";
         }
