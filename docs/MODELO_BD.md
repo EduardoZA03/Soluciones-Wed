@@ -4,10 +4,18 @@ Modelo que soporta las historias de usuario HU-01 a HU-09. Reemplaza a la
 Figura 3 del documento (que solo tenía `mesas`, `reservas`, `pedidos`,
 `usuarios` e `inventario`).
 
-El script completo está en [`src/main/resources/schema.sql`](../src/main/resources/schema.sql).
+El script completo está en [`backend/src/main/resources/schema.sql`](../backend/src/main/resources/schema.sql).
+En el backend, cada tabla es una entidad JPA en `backend/src/main/java/com/calsoft/modelo/`.
+
+**Tablas maestras:** `categorias`, `proveedores`, `inventario` (insumos).
 
 ```mermaid
 erDiagram
+    categorias {
+        int id PK
+        varchar nombre UK
+        varchar descripcion
+    }
     usuarios {
         int id PK
         varchar usuario UK
@@ -27,7 +35,7 @@ erDiagram
     inventario {
         int id PK
         varchar producto
-        varchar categoria
+        int categoria_id FK
         numeric stock
         varchar unidad
         numeric stock_minimo
@@ -113,6 +121,7 @@ erDiagram
         varchar estado
     }
 
+    categorias ||--o{ inventario : "clasifica"
     proveedores ||--o{ inventario : "abastece"
     proveedores ||--o{ ordenes_compra : "recibe"
     platos ||--o{ recetas : "se prepara con"
@@ -133,6 +142,7 @@ erDiagram
 
 | Tabla | Para qué | HU |
 |-------|----------|----|
+| `categorias` | Tabla maestra: clasificación de insumos (antes era un texto dentro del insumo) | HU-02 |
 | `proveedores` | Datos del proveedor y conexión a su API | HU-06, HU-07 |
 | `platos`, `recetas` | Carta y cantidad de cada insumo por porción | HU-03 |
 | `movimientos` | Kardex: cada cambio de stock con motivo y referencia; también es el histórico que usa la IA | HU-02, HU-03, HU-05 |
@@ -140,7 +150,8 @@ erDiagram
 | `ordenes_compra`, `orden_items` | Orden con proveedor, insumos, cantidades, total y respuesta del proveedor | HU-06, HU-07, HU-08 |
 | `orden_eventos` | Línea de tiempo: creada, aprobada, enviada, confirmada, recibida, errores de API | HU-09 |
 
-Columnas nuevas: `inventario.fecha_vencimiento`, `inventario.proveedor_id`,
+Columnas nuevas: `inventario.categoria_id` (reemplaza al texto `categoria`; el
+backend migra los datos solo), `inventario.fecha_vencimiento`, `inventario.proveedor_id`,
 `pedidos.plato_id`, `pedidos.stock_descontado`; además el stock pasó a `NUMERIC`
 para admitir cantidades como 0.25 kg.
 

@@ -1,0 +1,87 @@
+<div class="d-flex flex-wrap justify-content-between align-items-end gap-3 mb-4">
+  <div>
+    <h1 class="h2 fw-bold mb-1">Predicción de reposición
+      <span class="badge rounded-pill bg-primary-subtle text-primary-emphasis fs-6 align-middle"><i class="bi bi-stars"></i> IA</span>
+    </h1>
+    <p class="text-body-secondary mb-0">Consumo esperado según el histórico y la estacionalidad semanal</p>
+  </div>
+  <div class="d-flex align-items-center gap-2">
+    <label for="dias" class="text-body-secondary text-nowrap">Periodo:</label>
+    <select id="dias" class="form-select" (change)="cambiarPeriodo($any($event.target).value)">
+      @for (h of horizontes; track h) {
+        <option [value]="h" [selected]="h === dias()">Próximos {{ h }} días</option>
+      }
+    </select>
+  </div>
+</div>
+
+<div class="row g-3 mb-4">
+  <div class="col-6 col-lg-4"><app-stat-card etiqueta="Insumos a comprar" [valor]="seleccion().length" icono="cart-plus" tono="warning" /></div>
+  <div class="col-6 col-lg-4"><app-stat-card etiqueta="Costo estimado" [valor]="'S/ ' + (costo() | number: '1.2-2')" icono="wallet2" tono="success" /></div>
+  <div class="col-12 col-lg-4"><app-stat-card etiqueta="Periodo" [valor]="dias() + ' días'" icono="calendar-range" tono="info" /></div>
+</div>
+
+<div class="card mb-3">
+  <div class="table-responsive">
+    <table class="table table-hover align-middle mb-0">
+      <thead>
+        <tr>
+          <th class="ps-4"><span class="visually-hidden">Incluir</span></th>
+          <th>Insumo</th><th class="text-end">Stock</th><th class="text-end">Consumo diario</th>
+          <th class="text-end">Estimado {{ dias() }} días</th><th class="text-end">Cobertura</th>
+          <th>Tendencia</th><th>Confianza</th><th class="pe-4">Comprar</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (f of filas(); track f.insumo.id) {
+          <tr [class.text-body-secondary]="!f.conviene">
+            <td class="ps-4">
+              <input class="form-check-input" type="checkbox" [checked]="f.incluir" [attr.aria-label]="'Incluir ' + f.insumo.nombre"
+                     (change)="marcar(f, $any($event.target).checked)">
+            </td>
+            <td class="fw-medium">{{ f.insumo.nombre }}
+              <div class="small text-body-tertiary fw-normal">{{ f.diasConDatos }} días con datos</div>
+            </td>
+            <td class="text-end text-nowrap">{{ f.insumo.stock }} {{ f.insumo.unidad }}</td>
+            <td class="text-end">{{ f.consumoDiario }}</td>
+            <td class="text-end fw-medium">{{ f.consumoEstimado }}</td>
+            <td class="text-end text-nowrap">
+              @if (f.diasCobertura === null) { — } @else {
+                <span [class.text-danger]="f.diasCobertura < dias()" [class.fw-semibold]="f.diasCobertura < dias()">{{ f.diasCobertura }} días</span>
+              }
+            </td>
+            <td class="small">{{ f.tendencia }}</td>
+            <td><span class="badge rounded-pill bg-{{ tono(f.confianza) }}-subtle text-{{ tono(f.confianza) }}-emphasis">{{ f.confianza }}</span></td>
+            <td class="pe-4">
+              <div class="input-group input-group-sm flex-nowrap">
+                <input class="form-control text-end cantidad-corta" type="number" min="0" step="1" [value]="f.comprar"
+                       [attr.aria-label]="'Cantidad a comprar de ' + f.insumo.nombre" (input)="ajustar(f, $any($event.target).value)">
+                <span class="input-group-text">{{ f.insumo.unidad }}</span>
+              </div>
+            </td>
+          </tr>
+        } @empty {
+          <tr><td colspan="9" class="text-center text-body-secondary py-5">{{ cargando() ? 'Calculando…' : 'No hay insumos.' }}</td></tr>
+        }
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+  <span class="small text-body-secondary">Acepta las cantidades sugeridas o ajústalas: se crea una orden en borrador por proveedor.</span>
+  <button type="button" class="btn btn-primary rounded-pill px-4" (click)="generarOrdenes()">
+    <i class="bi bi-cart-plus me-1"></i>Generar órdenes de compra
+  </button>
+</div>
+
+<div class="card"><div class="card-body small">
+  <h2 class="h6 fw-semibold"><i class="bi bi-cpu me-1"></i>¿Cómo predice el modelo?</h2>
+  <ol class="mb-2">
+    <li><b>Aprende la estacionalidad semanal</b> de las salidas de las últimas 8 semanas (los fines de semana suelen ser más altos).</li>
+    <li><b>Estima el nivel de consumo</b> con suavizado exponencial, dando más peso a los días recientes (α = 0.3).</li>
+    <li><b>Pronostica</b> el periodo elegido: nivel × factor de cada día de la semana.</li>
+    <li><b>Sugiere comprar</b>: consumo estimado + stock mínimo − stock actual (redondeado hacia arriba).</li>
+  </ol>
+  <p class="mb-0 text-body-secondary">La <b>confianza</b> sale del error del modelo al pronosticar el pasado (Alta &lt; 25 %, Media &lt; 45 %). La <b>cobertura</b> indica para cuántos días alcanza el stock.</p>
+</div></div>

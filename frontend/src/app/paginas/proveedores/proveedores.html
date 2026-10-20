@@ -1,0 +1,106 @@
+<div class="d-flex flex-wrap justify-content-between align-items-end gap-3 mb-4">
+  <div>
+    <h1 class="h2 fw-bold mb-1">Proveedores</h1>
+    <p class="text-body-secondary mb-0">Tabla maestra: contacto y conexión por API para enviar órdenes de compra</p>
+  </div>
+  <button type="button" class="btn btn-primary rounded-pill px-4" (click)="nuevo()">
+    <i class="bi bi-plus-lg me-1"></i>Nuevo proveedor
+  </button>
+</div>
+
+<div class="alert alert-light border small">
+  <i class="bi bi-plug me-1"></i><b>Interoperabilidad:</b> cada orden aprobada se envía como JSON por
+  <code>HTTP POST</code> a la URL del proveedor, con su API key en la cabecera <code>X-Api-Key</code>.
+  Si la URL queda vacía se usa el <b>proveedor simulado</b> del backend.
+</div>
+
+<div class="card card-body mb-3">
+  <div class="input-group">
+    <span class="input-group-text bg-white"><i class="bi bi-search"></i></span>
+    <input class="form-control" placeholder="Buscar por razón social o RUC" aria-label="Buscar"
+           [value]="busqueda()" (input)="busqueda.set($any($event.target).value)">
+  </div>
+</div>
+
+<div class="card">
+  <div class="table-responsive">
+    <table class="table table-hover align-middle mb-0">
+      <thead>
+        <tr><th class="ps-4">Proveedor</th><th>RUC</th><th>Contacto</th><th>API</th><th>API key</th><th class="text-end pe-4">Acciones</th></tr>
+      </thead>
+      <tbody>
+        @for (p of visibles(); track p.id) {
+          <tr>
+            <td class="ps-4 fw-medium">{{ p.nombre }}</td>
+            <td>{{ p.ruc || '—' }}</td>
+            <td class="small">{{ p.telefono }}<br>{{ p.email }}</td>
+            <td class="small">
+              @if (p.simulado) {
+                <span class="badge rounded-pill bg-info-subtle text-info-emphasis">Simulado</span>
+              } @else {
+                <code>{{ p.apiUrl }}</code>
+              }
+            </td>
+            <td class="small font-monospace">{{ p.apiKeyOculta || '—' }}</td>
+            <td class="pe-4">
+              <div class="d-flex justify-content-end gap-1">
+                <button type="button" class="btn btn-sm btn-outline-secondary rounded-pill" title="Editar" (click)="editar(p)">
+                  <i class="bi bi-pencil"></i>
+                </button>
+                <button type="button" class="btn btn-sm btn-outline-danger rounded-pill" title="Eliminar" (click)="eliminar(p)">
+                  <i class="bi bi-trash"></i>
+                </button>
+              </div>
+            </td>
+          </tr>
+        } @empty {
+          <tr><td colspan="6" class="text-center text-body-secondary py-5">{{ cargando() ? 'Cargando…' : 'No hay proveedores.' }}</td></tr>
+        }
+      </tbody>
+    </table>
+  </div>
+</div>
+
+@if (modalAbierto()) {
+  <app-modal [titulo]="editandoId() ? 'Editar proveedor' : 'Nuevo proveedor'" (cerrar)="modalAbierto.set(false)">
+    <form [formGroup]="form" (ngSubmit)="guardar()" novalidate>
+      <div class="row g-3">
+        <div class="col-12">
+          <label for="nombre" class="form-label">Razón social</label>
+          <input id="nombre" class="form-control" formControlName="nombre" [class.is-invalid]="invalido('nombre')">
+          <div class="invalid-feedback">La razón social es obligatoria.</div>
+        </div>
+        <div class="col-6">
+          <label for="ruc" class="form-label">RUC</label>
+          <input id="ruc" class="form-control" formControlName="ruc" maxlength="11" placeholder="11 dígitos" [class.is-invalid]="invalido('ruc')">
+          <div class="invalid-feedback">El RUC debe tener 11 dígitos.</div>
+        </div>
+        <div class="col-6">
+          <label for="telefono" class="form-label">Teléfono</label>
+          <input id="telefono" class="form-control" formControlName="telefono">
+        </div>
+        <div class="col-12">
+          <label for="email" class="form-label">Email</label>
+          <input id="email" type="email" class="form-control" formControlName="email" [class.is-invalid]="invalido('email')">
+          <div class="invalid-feedback">Email inválido.</div>
+        </div>
+        <div class="col-12">
+          <label for="apiUrl" class="form-label">URL de la API</label>
+          <input id="apiUrl" class="form-control" formControlName="apiUrl" placeholder="Vacío = proveedor simulado" [class.is-invalid]="invalido('apiUrl')">
+          <div class="invalid-feedback">Debe empezar con http:// o https://</div>
+        </div>
+        <div class="col-12">
+          <label for="apiKey" class="form-label">API key</label>
+          <input id="apiKey" class="form-control" formControlName="apiKey" autocomplete="off"
+                 [placeholder]="editandoId() ? 'Déjalo vacío para conservar la actual' : 'Clave que da el proveedor'">
+        </div>
+      </div>
+      <div class="d-flex justify-content-end gap-2 mt-4">
+        <button type="button" class="btn btn-outline-secondary rounded-pill px-4" (click)="modalAbierto.set(false)">Cancelar</button>
+        <button type="submit" class="btn btn-primary rounded-pill px-4" [disabled]="guardando()">
+          {{ editandoId() ? 'Guardar cambios' : 'Crear' }}
+        </button>
+      </div>
+    </form>
+  </app-modal>
+}

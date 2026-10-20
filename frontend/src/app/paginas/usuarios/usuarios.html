@@ -1,0 +1,85 @@
+<div class="d-flex flex-wrap justify-content-between align-items-end gap-3 mb-4">
+  <div>
+    <h1 class="h2 fw-bold mb-1">Usuarios</h1>
+    <p class="text-body-secondary mb-0">Empleados, roles y accesos</p>
+  </div>
+  <button type="button" class="btn btn-primary rounded-pill px-4" (click)="nuevo()">
+    <i class="bi bi-plus-lg me-1"></i>Nuevo usuario
+  </button>
+</div>
+
+<div class="card">
+  <div class="table-responsive">
+    <table class="table table-hover align-middle mb-0">
+      <thead><tr><th class="ps-4">Usuario</th><th>Rol</th><th>Creado</th><th class="text-end pe-4">Acciones</th></tr></thead>
+      <tbody>
+        @for (u of usuarios(); track u.id) {
+          <tr>
+            <td class="ps-4 fw-medium">
+              {{ u.usuario }}
+              @if (esYo(u)) { <span class="badge rounded-pill bg-info-subtle text-info-emphasis ms-1">tú</span> }
+            </td>
+            <td>
+              <select class="form-select form-select-sm rounded-pill select-estado" [attr.aria-label]="'Rol de ' + u.usuario"
+                      (change)="cambiarRol(u, $any($event.target).value)">
+                @for (r of roles(); track r) {
+                  <option [value]="r" [selected]="r === u.rol">{{ r }}</option>
+                }
+              </select>
+            </td>
+            <td>{{ u.creadoEn | date: 'yyyy-MM-dd' }}</td>
+            <td class="pe-4">
+              <div class="d-flex justify-content-end gap-2">
+                <button type="button" class="btn btn-sm btn-outline-secondary rounded-pill text-nowrap" (click)="abrirClave(u)">Resetear clave</button>
+                <button type="button" class="btn btn-sm btn-outline-danger rounded-pill" [disabled]="esYo(u)" (click)="eliminar(u)">Eliminar</button>
+              </div>
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+</div>
+
+@if (modalNuevo()) {
+  <app-modal titulo="Nuevo usuario" (cerrar)="modalNuevo.set(false)">
+    <form [formGroup]="form" (ngSubmit)="crear()" novalidate>
+      <div class="mb-3">
+        <label for="usuario" class="form-label">Usuario</label>
+        <input id="usuario" class="form-control" formControlName="usuario"
+               [class.is-invalid]="form.controls.usuario.invalid && form.controls.usuario.touched">
+      </div>
+      <div class="mb-3">
+        <label for="clave" class="form-label">Clave</label>
+        <input id="clave" type="password" class="form-control" formControlName="clave" placeholder="Mínimo 4 caracteres"
+               [class.is-invalid]="form.controls.clave.invalid && form.controls.clave.touched">
+        <div class="invalid-feedback">Mínimo 4 caracteres.</div>
+      </div>
+      <div class="mb-3">
+        <label for="rol" class="form-label">Rol</label>
+        <select id="rol" class="form-select" formControlName="rol">
+          @for (r of roles(); track r) { <option [value]="r">{{ r }}</option> }
+        </select>
+      </div>
+      <div class="d-flex justify-content-end gap-2">
+        <button type="button" class="btn btn-outline-secondary rounded-pill px-4" (click)="modalNuevo.set(false)">Cancelar</button>
+        <button type="submit" class="btn btn-primary rounded-pill px-4">Crear</button>
+      </div>
+    </form>
+  </app-modal>
+}
+
+@if (claveDe(); as u) {
+  <app-modal [titulo]="'Nueva clave para ' + u.usuario" (cerrar)="claveDe.set(null)">
+    <form [formGroup]="formClave" (ngSubmit)="guardarClave()" novalidate>
+      <label for="nuevaClave" class="form-label">Nueva clave</label>
+      <input id="nuevaClave" type="password" class="form-control" formControlName="clave" placeholder="Mínimo 4 caracteres"
+             [class.is-invalid]="formClave.controls.clave.invalid && formClave.controls.clave.touched">
+      <div class="invalid-feedback">Mínimo 4 caracteres.</div>
+      <div class="d-flex justify-content-end gap-2 mt-4">
+        <button type="button" class="btn btn-outline-secondary rounded-pill px-4" (click)="claveDe.set(null)">Cancelar</button>
+        <button type="submit" class="btn btn-primary rounded-pill px-4">Guardar</button>
+      </div>
+    </form>
+  </app-modal>
+}

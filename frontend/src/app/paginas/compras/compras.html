@@ -1,0 +1,60 @@
+<div class="d-flex flex-wrap justify-content-between align-items-end gap-3 mb-4">
+  <div>
+    <h1 class="h2 fw-bold mb-1">Órdenes de compra</h1>
+    <p class="text-body-secondary mb-0">Pedidos a proveedores enviados por API, con trazabilidad de cada paso</p>
+  </div>
+  <button type="button" class="btn btn-primary rounded-pill px-4" (click)="modalAbierto.set(true)">
+    <i class="bi bi-plus-lg me-1"></i>Nueva orden
+  </button>
+</div>
+
+<div class="d-flex flex-wrap align-items-center gap-2 mb-3">
+  <span class="fw-medium text-body-secondary me-1">Estado:</span>
+  @for (e of [''].concat(estados); track e) {
+    <button type="button" class="btn btn-sm rounded-pill" [class.btn-primary]="filtro() === e"
+            [class.btn-outline-secondary]="filtro() !== e" (click)="filtrar(e)">{{ e || 'Todas' }}</button>
+  }
+</div>
+
+<div class="card">
+  <div class="table-responsive">
+    <table class="table table-hover align-middle mb-0">
+      <thead>
+        <tr><th class="ps-4">Código</th><th>Proveedor</th><th>Estado</th><th class="text-end">Ítems</th><th class="text-end">Total</th><th>Entrega</th><th>Creada</th><th class="pe-4"></th></tr>
+      </thead>
+      <tbody>
+        @for (o of ordenes(); track o.id) {
+          <tr>
+            <td class="ps-4 fw-medium text-nowrap">{{ o.codigo }}</td>
+            <td>{{ o.proveedor.nombre }}</td>
+            <td><span class="badge rounded-pill bg-{{ tono(o.estado) }}-subtle text-{{ tono(o.estado) }}-emphasis">{{ o.estado }}</span></td>
+            <td class="text-end">{{ o.items.length }}</td>
+            <td class="text-end text-nowrap">S/ {{ o.total | number: '1.2-2' }}</td>
+            <td class="text-nowrap">{{ o.fechaEntrega || '—' }}</td>
+            <td class="text-nowrap small">{{ o.creadoEn | date: 'yyyy-MM-dd HH:mm' }}</td>
+            <td class="pe-4 text-end"><a class="btn btn-sm btn-outline-secondary rounded-pill" [routerLink]="['/compras', o.id]">Ver</a></td>
+          </tr>
+        } @empty {
+          <tr><td colspan="8" class="text-center text-body-secondary py-5">{{ cargando() ? 'Cargando…' : 'No hay órdenes de compra.' }}</td></tr>
+        }
+      </tbody>
+    </table>
+  </div>
+</div>
+
+@if (modalAbierto()) {
+  <app-modal titulo="Nueva orden de compra" (cerrar)="modalAbierto.set(false)">
+    <label for="proveedor" class="form-label">Proveedor</label>
+    <select #prov id="proveedor" class="form-select">
+      <option value="">Elige un proveedor…</option>
+      @for (p of proveedores(); track p.id) {
+        <option [value]="p.id">{{ p.nombre }}</option>
+      }
+    </select>
+    <div class="form-text">También puedes generar órdenes desde Alertas o Predicción IA.</div>
+    <div class="d-flex justify-content-end gap-2 mt-4">
+      <button type="button" class="btn btn-outline-secondary rounded-pill px-4" (click)="modalAbierto.set(false)">Cancelar</button>
+      <button type="button" class="btn btn-primary rounded-pill px-4" (click)="crear(prov.value)">Crear borrador</button>
+    </div>
+  </app-modal>
+}

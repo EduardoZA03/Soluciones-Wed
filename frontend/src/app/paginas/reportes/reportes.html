@@ -1,0 +1,86 @@
+<div class="mb-4">
+  <h1 class="h2 fw-bold mb-1">Reportes</h1>
+  <p class="text-body-secondary mb-0">Estadísticas del negocio, consumo y abastecimiento</p>
+</div>
+
+@if (datos(); as d) {
+  <h2 class="titulo-seccion mb-3">Consumo, mermas y compras (últimos 30 días)</h2>
+  <div class="row g-3 mb-4">
+    <div class="col-6 col-lg-3"><app-stat-card etiqueta="Consumo valorizado" [valor]="'S/ ' + (d.consumo30 | number: '1.2-2')" icono="graph-down-arrow" tono="primary" /></div>
+    <div class="col-6 col-lg-3"><app-stat-card etiqueta="Mermas" [valor]="'S/ ' + (d.mermas30 | number: '1.2-2')" icono="trash3" tono="danger" /></div>
+    <div class="col-6 col-lg-3"><app-stat-card etiqueta="Proyección compras 7 días (IA)" [valor]="'S/ ' + (d.proyeccionCompras7 | number: '1.2-2')" icono="stars" tono="info" /></div>
+    <div class="col-6 col-lg-3"><app-stat-card etiqueta="Alertas pendientes" [valor]="d.alertasPendientes" icono="bell" tono="warning" /></div>
+  </div>
+
+  <div class="row g-4 mb-4">
+    <div class="col-lg-6">
+      <div class="card h-100"><div class="card-body">
+        <h3 class="h5 fw-semibold mb-4">Insumos más consumidos (S/)</h3>
+        @for (t of d.topConsumo; track t.nombre) {
+          <div class="mb-3">
+            <div class="d-flex justify-content-between small mb-1">
+              <span class="fw-medium">{{ t.nombre }}</span><span class="text-body-secondary">S/ {{ t.cantidad | number: '1.0-0' }}</span>
+            </div>
+            <div class="progress progress-delgada rounded-pill" role="progressbar" [attr.aria-label]="t.nombre">
+              <div class="progress-bar bg-primary rounded-pill" [style.width.%]="ancho(d.topConsumo, t)"></div>
+            </div>
+          </div>
+        } @empty {
+          <p class="text-body-tertiary mb-0">Aún no hay consumo registrado.</p>
+        }
+      </div></div>
+    </div>
+    <div class="col-lg-6">
+      <div class="card h-100"><div class="card-body">
+        <h3 class="h5 fw-semibold mb-3">Órdenes de compra por estado</h3>
+        <ul class="list-group list-group-flush">
+          @for (o of d.ordenesPorEstado; track o.nombre) {
+            <li class="list-group-item d-flex justify-content-between px-0"><span>{{ o.nombre }}</span><span class="fw-bold">{{ o.cantidad }}</span></li>
+          } @empty {
+            <li class="list-group-item px-0 text-body-tertiary">Aún no hay órdenes.</li>
+          }
+        </ul>
+      </div></div>
+    </div>
+  </div>
+
+  <h2 class="titulo-seccion mb-3">Pedidos y reservas</h2>
+  <div class="row g-3 mb-4">
+    <div class="col-6 col-lg-3"><app-stat-card etiqueta="Pedidos" [valor]="d.pedidos.total" icono="list-check" tono="primary" /></div>
+    <div class="col-6 col-lg-3"><app-stat-card etiqueta="Entregados" [valor]="d.pedidos['Entregado']" icono="check-circle" tono="success" /></div>
+    <div class="col-6 col-lg-3"><app-stat-card etiqueta="Reservas" [valor]="d.reservas.total" icono="calendar-check" tono="info" /></div>
+    <div class="col-6 col-lg-3"><app-stat-card etiqueta="Valor inventario" [valor]="'S/ ' + (d.inventario.valorTotal | number: '1.2-2')" icono="wallet2" tono="success" /></div>
+  </div>
+
+  <div class="row g-4">
+    <div class="col-lg-6">
+      <div class="card h-100"><div class="card-body">
+        <h3 class="h5 fw-semibold mb-4">Platos más vendidos</h3>
+        @for (t of d.topProductos; track t.nombre) {
+          <div class="mb-3">
+            <div class="d-flex justify-content-between small mb-1">
+              <span class="fw-medium">{{ t.nombre }}</span><span class="text-body-secondary">{{ t.cantidad }}</span>
+            </div>
+            <div class="progress progress-delgada rounded-pill" role="progressbar" [attr.aria-label]="t.nombre">
+              <div class="progress-bar bg-primary rounded-pill" [style.width.%]="ancho(d.topProductos, t)"></div>
+            </div>
+          </div>
+        } @empty {
+          <p class="text-body-tertiary mb-0">Aún no hay pedidos.</p>
+        }
+      </div></div>
+    </div>
+    <div class="col-lg-6">
+      <div class="card h-100"><div class="card-body">
+        <h3 class="h5 fw-semibold mb-3">Usuarios por rol</h3>
+        <ul class="list-group list-group-flush">
+          @for (u of d.usuariosPorRol; track u.nombre) {
+            <li class="list-group-item d-flex justify-content-between px-0"><span>{{ u.nombre }}</span><span class="fw-bold">{{ u.cantidad }}</span></li>
+          }
+        </ul>
+      </div></div>
+    </div>
+  </div>
+} @else {
+  <p class="text-body-tertiary">Cargando reportes…</p>
+}

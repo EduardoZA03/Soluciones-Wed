@@ -1,0 +1,76 @@
+<div class="mb-4">
+  <h1 class="h2 fw-bold mb-1">Hola, {{ auth.sesion()?.usuario }}</h1>
+  <p class="text-body-secondary mb-0">Resumen general de La Crianza Arequipeña</p>
+</div>
+
+@if (datos(); as d) {
+  <div class="row g-3 mb-4">
+    <div class="col-6 col-lg-3">
+      <app-stat-card etiqueta="Pedidos activos" [valor]="d.pedidos['Pendiente'] + d.pedidos['En cocina']"
+                     [sub]="d.pedidos.total + ' en total'" icono="list-check" tono="primary" />
+    </div>
+    <div class="col-6 col-lg-3">
+      <app-stat-card etiqueta="Reservas pendientes" [valor]="d.reservas['Pendiente']"
+                     [sub]="d.reservas['Confirmada'] + ' confirmadas'" icono="calendar-week" tono="warning" />
+    </div>
+    <div class="col-6 col-lg-3">
+      <app-stat-card etiqueta="Alertas pendientes" [valor]="d.alertasPendientes"
+                     [sub]="d.inventario.bajoStock + ' insumos en stock mínimo'" icono="bell" tono="danger" />
+    </div>
+    <div class="col-6 col-lg-3">
+      <app-stat-card etiqueta="Órdenes en curso" [valor]="d.ordenesEnCurso"
+                     [sub]="'Inventario: S/ ' + (d.inventario.valorTotal | number: '1.0-0')" icono="truck" tono="success" />
+    </div>
+  </div>
+
+  <div class="row g-4">
+    <div class="col-lg-6">
+      <div class="card h-100"><div class="card-body">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <h2 class="titulo-seccion mb-0">Pedidos recientes</h2>
+          @if (auth.puede('pedidos')) {
+            <a class="small fw-medium link-secondary text-decoration-none" routerLink="/pedidos">Ver todos →</a>
+          }
+        </div>
+        <ul class="list-group gap-2">
+          @for (p of d.pedidosRecientes; track p.id) {
+            <li class="list-group-item border rounded-3 d-flex justify-content-between align-items-center">
+              <div>
+                <div class="fw-medium">{{ p.producto }} × {{ p.cantidad }}</div>
+                <div class="small text-body-secondary">{{ p.cliente }} · Mesa {{ p.mesa }}</div>
+              </div>
+              <span class="badge rounded-pill bg-{{ tono(p.estado) }}-subtle text-{{ tono(p.estado) }}-emphasis">{{ p.estado }}</span>
+            </li>
+          } @empty {
+            <li class="list-group-item border-0 bg-body-tertiary rounded-3 text-center text-body-secondary py-4">No hay pedidos.</li>
+          }
+        </ul>
+      </div></div>
+    </div>
+    <div class="col-lg-6">
+      <div class="card h-100"><div class="card-body">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <h2 class="titulo-seccion mb-0">Próximas reservas</h2>
+          @if (auth.puede('reservas')) {
+            <a class="small fw-medium link-secondary text-decoration-none" routerLink="/reservas">Ver todas →</a>
+          }
+        </div>
+        <ul class="list-group gap-2">
+          @for (r of d.reservasProximas; track r.id) {
+            <li class="list-group-item border rounded-3 d-flex justify-content-between align-items-center">
+              <div>
+                <div class="fw-medium">{{ r.cliente }}</div>
+                <div class="small text-body-secondary">{{ r.fecha }} · {{ r.hora.slice(0, 5) }} · {{ r.personas }} pers · Mesa {{ r.mesa }}</div>
+              </div>
+              <span class="badge rounded-pill bg-{{ tono(r.estado) }}-subtle text-{{ tono(r.estado) }}-emphasis">{{ r.estado }}</span>
+            </li>
+          } @empty {
+            <li class="list-group-item border-0 bg-body-tertiary rounded-3 text-center text-body-secondary py-4">Sin reservas próximas.</li>
+          }
+        </ul>
+      </div></div>
+    </div>
+  </div>
+} @else {
+  <p class="text-body-tertiary">Cargando…</p>
+}

@@ -1,0 +1,11 @@
+<router-outlet />
+
+<!-- Avisos flotantes -->
+<div class="avisos" aria-live="polite">
+  @for (a of avisos.avisos(); track a.id) {
+    <div class="alert alert-{{ a.tipo }} alert-dismissible shadow-sm" role="alert">
+      <i class="bi me-1" [class.bi-check-circle]="a.tipo === 'success'" [class.bi-exclamation-circle]="a.tipo === 'danger'"></i>{{ a.texto }}
+      <button type="button" class="btn-close" aria-label="Cerrar" (click)="avisos.cerrar(a.id)"></button>
+    </div>
+  }
+</div>

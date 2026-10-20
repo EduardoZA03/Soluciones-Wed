@@ -1,0 +1,107 @@
+<div class="d-flex flex-wrap justify-content-between align-items-end gap-3 mb-4">
+  <div>
+    <h1 class="h2 fw-bold mb-1">Pedidos (POS)</h1>
+    <p class="text-body-secondary mb-0">Cada venta descuenta del inventario los insumos de la receta</p>
+  </div>
+  <button type="button" class="btn btn-primary rounded-pill px-4" (click)="nuevo()">
+    <i class="bi bi-plus-lg me-1"></i>Nuevo pedido
+  </button>
+</div>
+
+<div class="row g-3 mb-4">
+  <div class="col-6 col-lg-3"><app-stat-card etiqueta="Total" [valor]="resumen().total" icono="list-check" tono="primary" /></div>
+  <div class="col-6 col-lg-3"><app-stat-card etiqueta="Pendientes" [valor]="resumen().pendientes" icono="clock" tono="warning" /></div>
+  <div class="col-6 col-lg-3"><app-stat-card etiqueta="En cocina" [valor]="resumen().cocina" icono="egg-fried" tono="info" /></div>
+  <div class="col-6 col-lg-3"><app-stat-card etiqueta="Entregados" [valor]="resumen().entregados" icono="check-circle" tono="success" /></div>
+</div>
+
+<div class="d-flex flex-wrap align-items-center gap-2 mb-3">
+  <span class="fw-medium text-body-secondary me-1">Mesero:</span>
+  @for (m of ['Todos'].concat(meseros()); track m) {
+    <button type="button" class="btn btn-sm rounded-pill" [class.btn-primary]="filtroMesero() === m"
+            [class.btn-outline-secondary]="filtroMesero() !== m" (click)="filtroMesero.set(m)">{{ m }}</button>
+  }
+</div>
+
+<div class="card">
+  <div class="table-responsive">
+    <table class="table table-hover align-middle mb-0">
+      <thead>
+        <tr><th class="ps-4">#</th><th>Cliente</th><th>Mesero</th><th>Plato</th><th>Cant.</th><th>Mesa</th><th>Estado</th><th class="text-end pe-4">Acciones</th></tr>
+      </thead>
+      <tbody>
+        @for (p of visibles(); track p.id; let i = $index) {
+          <tr>
+            <td class="ps-4 text-body-tertiary">{{ i + 1 }}</td>
+            <td class="fw-medium">{{ p.cliente }}</td>
+            <td>{{ p.mesero }}</td>
+            <td>
+              {{ p.producto }}
+              @if (p.stockDescontado) {
+                <i class="bi bi-box-arrow-down text-success ms-1" title="Insumos descontados del inventario"></i>
+              }
+            </td>
+            <td>{{ p.cantidad }}</td>
+            <td>{{ p.mesa }}</td>
+            <td><span class="badge rounded-pill bg-{{ tono(p.estado) }}-subtle text-{{ tono(p.estado) }}-emphasis">{{ p.estado }}</span></td>
+            <td class="pe-4">
+              <div class="d-flex justify-content-end gap-2">
+                <button type="button" class="btn btn-sm btn-outline-secondary rounded-pill" (click)="cambiar(p)">Cambiar</button>
+                <button type="button" class="btn btn-sm btn-outline-danger rounded-pill" (click)="eliminar(p)">Eliminar</button>
+              </div>
+            </td>
+          </tr>
+        } @empty {
+          <tr><td colspan="8" class="text-center text-body-secondary py-5">{{ cargando() ? 'Cargando…' : 'No hay pedidos registrados.' }}</td></tr>
+        }
+      </tbody>
+    </table>
+  </div>
+</div>
+
+@if (modalAbierto()) {
+  <app-modal titulo="Nuevo pedido" (cerrar)="modalAbierto.set(false)">
+    <form [formGroup]="form" (ngSubmit)="registrar()" novalidate>
+      <div class="row g-3">
+        <div class="col-6">
+          <label for="cliente" class="form-label">Cliente</label>
+          <input id="cliente" class="form-control" formControlName="cliente" [class.is-invalid]="invalido('cliente')">
+        </div>
+        <div class="col-6">
+          <label for="mesero" class="form-label">Mesero</label>
+          <input id="mesero" class="form-control" formControlName="mesero" [class.is-invalid]="invalido('mesero')">
+        </div>
+        <div class="col-12">
+          <label for="platoId" class="form-label">Plato de la carta</label>
+          <select id="platoId" class="form-select" formControlName="platoId" [class.is-invalid]="invalido('platoId')">
+            <option [ngValue]="null">Elige un plato…</option>
+            @for (pl of platos(); track pl.id) {
+              <option [ngValue]="pl.id">{{ pl.nombre }} — S/ {{ pl.precio | number: '1.2-2' }}</option>
+            }
+          </select>
+          <div class="form-text">Al registrar se descuentan del inventario los insumos de su receta.</div>
+        </div>
+        <div class="col-4">
+          <label for="cantidad" class="form-label">Cantidad</label>
+          <input id="cantidad" type="number" min="1" class="form-control" formControlName="cantidad" [class.is-invalid]="invalido('cantidad')">
+        </div>
+        <div class="col-4">
+          <label for="mesa" class="form-label">Mesa</label>
+          <input id="mesa" type="number" min="1" class="form-control" formControlName="mesa" [class.is-invalid]="invalido('mesa')">
+        </div>
+        <div class="col-4">
+          <label for="estado" class="form-label">Estado</label>
+          <select id="estado" class="form-select" formControlName="estado">
+            @for (e of estados; track e) {
+              <option [value]="e">{{ e }}</option>
+            }
+          </select>
+        </div>
+      </div>
+      <div class="d-flex justify-content-end gap-2 mt-4">
+        <button type="button" class="btn btn-outline-secondary rounded-pill px-4" (click)="modalAbierto.set(false)">Cancelar</button>
+        <button type="submit" class="btn btn-primary rounded-pill px-4">Registrar</button>
+      </div>
+    </form>
+  </app-modal>
+}

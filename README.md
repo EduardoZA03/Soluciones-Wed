@@ -1,213 +1,134 @@
-# CalSoft — Sistema POS (versión Java)
+# CalSoft — Gestión de inventario con IA e interoperabilidad
 
-**CalSoft** es un sistema administrativo / punto de venta para restaurantes,
-con **gestión de inventario con inteligencia artificial e interoperabilidad
-con proveedores** (caso: restaurante *La Crianza Arequipeña*).
-Curso **Soluciones Web y Aplicaciones Distribuidas**.
+Sistema web para el restaurante **La Crianza Arequipeña**: inventario de
+insumos con **inteligencia artificial** (predicción de reposición) e
+**interoperabilidad con proveedores** (órdenes de compra por API), además de
+POS, cocina, reservas y reportes.
 
-Esta es la versión en **Java web** (Servlets + JSP + JSTL) con **PostgreSQL**,
-lista para abrir en **Apache NetBeans**. La versión original estaba en
-JavaScript (Node.js + Express en el backend y React en el frontend).
+Curso **Soluciones Web y Aplicaciones Distribuidas** — Universidad Privada del Norte.
 
-> 📗 **Historias de usuario:** [docs/HISTORIAS_USUARIO.md](docs/HISTORIAS_USUARIO.md)
-> explica cómo se cumple cada HU (HU-01 a HU-09) y cómo probarla.
-> 🗂️ **Modelo de BD:** [docs/MODELO_BD.md](docs/MODELO_BD.md) (diagrama entidad-relación).
-
-> 📘 **¿Primera vez?** Sigue la guía paso a paso
-> **[INSTALACION.md](INSTALACION.md)**: programas necesarios, base de datos,
-> NetBeans, Tomcat, tareas comunes con PostgreSQL y solución de problemas.
+> 📘 **Instalación paso a paso:** [INSTALACION.md](INSTALACION.md)
+> 📗 **Historias de usuario (HU-01 a HU-09):** [docs/HISTORIAS_USUARIO.md](docs/HISTORIAS_USUARIO.md)
+> 🔌 **API REST (todos los endpoints):** [docs/API.md](docs/API.md)
+> 🗂️ **Modelo de base de datos:** [docs/MODELO_BD.md](docs/MODELO_BD.md)
 
 ---
 
-## Stack
+## Arquitectura
 
-| Capa       | Tecnología                                         |
-|------------|----------------------------------------------------|
-| Vistas     | JSP + JSTL, **Bootstrap 5.3** + Bootstrap Icons (WebJars, sin CDN) |
-| Lógica     | Servlets (Jakarta EE 10), patrón MVC + DAO + capa de servicios con transacciones |
-| Datos      | PostgreSQL vía JDBC (consultas parametrizadas)     |
-| IA         | Pronóstico de consumo: suavizado exponencial con estacionalidad semanal |
-| Interoperabilidad | API REST JSON con proveedores (`java.net.http` + **Gson**) |
-| QR         | Generación con **ZXing**, lectura con cámara (**html5-qrcode**) o lectora USB |
-| Seguridad  | Contraseñas con **BCrypt**, sesión HTTP + filtro, permisos por rol, token CSRF |
-| Build      | Maven (proyecto `war`)                             |
-| Servidor   | Apache Tomcat 10.1 o superior                      |
+```
+┌─────────────────────────┐   HTTP + JSON    ┌──────────────────────────────┐   JDBC   ┌────────────┐
+│ Frontend  Angular 20    │ ───────────────▶ │ Backend  Spring Boot 3.5     │ ───────▶ │ PostgreSQL │
+│ Bootstrap 5 · puerto    │  token JWT en    │ API REST · JPA · Security    │          │ restaurante│
+│ 4200                    │  cada petición   │ puerto 8081                  │          └────────────┘
+└─────────────────────────┘                  │        │ HTTP POST JSON (X-Api-Key)
+                                             │        ▼
+                                             │  API del proveedor (simulado incluido)
+                                             └──────────────────────────────┘
+```
 
-## Estructura
+| Capa | Tecnología |
+|------|------------|
+| Frontend | **Angular 20** (componentes standalone, signals, formularios reactivos, lazy loading), **Bootstrap 5.3**, Bootstrap Icons, html5-qrcode |
+| Backend | **Spring Boot 3.5** (Java 17): Spring Web (API REST), **Spring Data JPA** (Hibernate), Bean Validation, **Spring Security + JWT** |
+| Base de datos | PostgreSQL 14+ (el backend crea la base, aplica el esquema y siembra datos demo) |
+| IA | Pronóstico de consumo: suavizado exponencial con estacionalidad semanal |
+| Interoperabilidad | Cliente REST (`RestClient`) que envía órdenes JSON al proveedor; proveedor simulado incluido |
+| QR | Generación con ZXing (backend), lectura con la cámara (html5-qrcode) o lectora USB |
+
+## Estructura del repositorio
 
 ```
 CalSoft-Java/
-├── pom.xml                                  → dependencias Maven
-└── src/main/
-    ├── java/com/calsoft/
-    │   ├── config/      Conexion.java         → conexión JDBC (lee db.properties)
-    │   │                InicializadorBD.java  → crea BD, tablas y datos demo al arrancar
-    │   │                Transaccion.java      → varias consultas en una sola transacción
-    │   ├── modelo/      Usuario, Pedido, Reserva, Producto (insumo), Plato, RecetaItem,
-    │   │                Movimiento, Alerta, Proveedor, OrdenCompra, OrdenItem,
-    │   │                OrdenEvento, Prediccion, Resumen, Conteo
-    │   ├── dao/         Un DAO por tabla: consultas SQL
-    │   ├── servicio/    InventarioService (descuento por receta, movimientos),
-    │   │                OrdenService (ciclo de la orden), PrediccionService (IA)
-    │   ├── integracion/ ProveedorApiCliente + JSON de solicitud y respuesta
-    │   ├── api/         ProveedorSimuladoServlet → API REST que imita a un proveedor
-    │   ├── controlador/ Un servlet por pantalla (+ ServletBase, QrServlet)
-    │   ├── filtro/      AutenticacionFiltro.java → sesión, permisos por rol y CSRF
-    │   └── util/        Permisos (rol → módulos), Formulario (validación)
-    ├── resources/
-    │   ├── db.properties.example → plantilla; cópiala como db.properties  ← AJUSTAR
-    │   └── schema.sql     → esquema de la base de datos
-    └── webapp/
-        ├── WEB-INF/web.xml
-        ├── WEB-INF/vistas/   → páginas JSP (no accesibles directamente)
-        │   └── plantilla/    → cabecera (menú lateral) y pie comunes
-        ├── WEB-INF/tags/     → componentes JSP reutilizables (stat.tag)
-        ├── css/estilos.css   → colores de la marca sobre Bootstrap
-        ├── js/app.js         → comportamiento de la interfaz (modales, confirmaciones)
-        ├── js/recepcion.js   → lector de QR con la cámara
-        └── img/logo.png
-docs/
-├── HISTORIAS_USUARIO.md → HU-01 a HU-09: dónde están y cómo probarlas
-└── MODELO_BD.md         → diagrama entidad-relación
+├── backend/                         ← se abre en NetBeans (proyecto Maven)
+│   ├── pom.xml
+│   ├── application-local.properties.example   → copia como application-local.properties
+│   └── src/main/
+│       ├── java/com/calsoft/
+│       │   ├── CalSoftApplication.java    → arranque
+│       │   ├── config/        crea la BD, aplica schema.sql y datos demo
+│       │   ├── modelo/        entidades JPA (Categoria, Proveedor, Insumo, Plato, Pedido, OrdenCompra…)
+│       │   ├── repositorio/   repositorios Spring Data JPA (CRUD automático)
+│       │   ├── servicio/      lógica: inventario, alertas, IA, órdenes, reportes
+│       │   ├── controlador/   controladores REST (/api/...)
+│       │   ├── integracion/   cliente de la API del proveedor
+│       │   ├── seguridad/     JWT, roles y permisos
+│       │   ├── dto/           datos de entrada/salida con validaciones
+│       │   └── error/         respuestas de error {"mensaje": "..."}
+│       └── resources/
+│           ├── application.properties
+│           └── schema.sql
+├── frontend/                        ← Angular (VS Code o NetBeans)
+│   ├── proxy.conf.json              → /api → http://localhost:8081
+│   └── src/app/
+│       ├── core/          servicios HTTP, sesión, interceptor JWT, guardas, modelos
+│       ├── layout/        menú lateral filtrado por rol
+│       ├── compartido/    componentes reutilizables (tarjeta, modal)
+│       └── paginas/       una carpeta por pantalla (.ts lógica + .html vista)
+└── docs/
 ```
 
-### Separación por capas
+## Tablas maestras (CRUD completos)
 
-Cada cosa vive en su propia carpeta y no se mezclan:
+| Tabla maestra | Pantalla | API | Operaciones |
+|---------------|----------|-----|-------------|
+| **Categorías** | `/categorias` | `/api/categorias` | Listar, buscar, crear, editar, eliminar (no deja borrar si algún insumo la usa) |
+| **Proveedores** | `/proveedores` | `/api/proveedores` | Listar, buscar, crear, editar, eliminar; RUC de 11 dígitos, email, URL y API key |
+| **Insumos** | `/insumos` | `/api/insumos` | Listar con búsqueda y filtros (categoría, estado), crear, editar, eliminar, movimientos de stock |
 
-| Capa | Dónde | Contiene |
-|------|-------|----------|
-| **Programación (lógica)** | `src/main/java` | Servlets, DAO, modelos, validación, seguridad |
-| **Datos** | `src/main/resources` | `schema.sql`, configuración de conexión |
-| **Vistas (estructura HTML)** | `src/main/webapp/WEB-INF/vistas` | Páginas JSP, sin SQL ni lógica de negocio |
-| **Diseño** | `src/main/webapp/css` + Bootstrap | Estilos; Bootstrap llega por Maven (`pom.xml`) |
-| **Comportamiento** | `src/main/webapp/js` | JavaScript de la interfaz (no accede a datos) |
-| **Imágenes** | `src/main/webapp/img` | Logo e imágenes |
-
-Las JSP no tienen bloques `<style>` ni `<script>` propios: los estilos van en
-`estilos.css` y el JS en `app.js` / `recepcion.js`. La única excepción es el
-ancho de las barras de Reportes, que Bootstrap define con `style="width: …%"`.
-
-| Proyecto original (JS)               | Equivalente en Java                         |
-|--------------------------------------|---------------------------------------------|
-| `backend/src/routes` + `controllers` | `controlador/*Servlet.java`                 |
-| consultas en los controllers         | `dao/*DAO.java`                             |
-| `middleware/auth.js` (JWT)           | `filtro/AutenticacionFiltro.java` (sesión)  |
-| `.env` / `.env.example`              | `resources/db.properties` / `.example`      |
-| `npm run seed`                       | `config/InicializadorBD.java` (automático)  |
-| `frontend/src/pages/*.jsx`           | `webapp/WEB-INF/vistas/*.jsp`               |
-| Tailwind CSS                         | Bootstrap 5 + `webapp/css/estilos.css`      |
-| `components/ui/StatCard.jsx`         | `WEB-INF/tags/stat.tag`                     |
-
----
-
-## Requisitos
-
-1. **JDK 17 o superior** (por ejemplo, Eclipse Temurin 21).
-2. **Apache NetBeans** 20 o superior.
-3. **Apache Tomcat 10.1** (NetBeans puede registrarlo; ver paso 3).
-4. **PostgreSQL** 14 o superior.
-
-## Puesta en marcha en NetBeans (resumen)
-
-Versión corta. El paso a paso completo, con los menús exactos y los errores
-frecuentes, está en [INSTALACION.md](INSTALACION.md).
-
-### 1. Configurar la base de datos
-
-En `src/main/resources/`, copia `db.properties.example` como `db.properties`
-y pon el usuario y la clave de tu PostgreSQL (`db.properties` está en
-`.gitignore`, así tu clave no se sube al repositorio):
-
-```properties
-db.user=postgres
-db.password=TU_CLAVE
-```
-
-No hace falta crear nada a mano: al arrancar, la aplicación **crea la base
-`restaurante`** si no existe, aplica `schema.sql` (también actualiza bases de
-la versión anterior sin perder datos) y siembra el usuario admin y los datos
-demo: insumos, proveedores, carta con recetas y 8 semanas de consumo histórico
-para la IA (solo si las tablas están vacías).
-
-### 2. Abrir el proyecto
-
-`File → Open Project…` y selecciona la carpeta `CalSoft-Java`. NetBeans lo
-reconoce como proyecto Maven (ícono de taza) y descarga las dependencias.
-
-### 3. Registrar Tomcat (solo la primera vez)
-
-1. Descarga Tomcat 10.1 (zip) desde https://tomcat.apache.org y descomprímelo.
-2. En NetBeans: `Tools → Servers → Add Server… → Apache Tomcat or TomEE`.
-3. Elige la carpeta de Tomcat y crea un usuario/clave de administrador.
-
-### 4. Ejecutar
-
-Clic derecho en el proyecto → **Run** (o `F6`). Si pregunta el servidor,
-elige el Tomcat registrado. Se abrirá:
-
-**http://localhost:8080/CalSoft**
-
-| Usuario | Clave  |
-|---------|--------|
-| `admin` | `1234` |
-
----
+Cada CRUD tiene: entidad JPA → repositorio Spring Data → servicio con reglas →
+controlador REST con `@Valid` → servicio Angular → página con formulario
+reactivo y validaciones en pantalla.
 
 ## Módulos
 
-| Módulo | Ruta | Descripción | HU |
-|--------|------|-------------|----|
-| Inicio | `/dashboard` | Resumen, alertas, órdenes en curso, pedidos y reservas. | — |
-| Pedidos (POS) | `/pedidos` | Venta de platos de la carta; descuenta insumos por receta. | HU-03 |
-| Cocina | `/cocina` | Pedidos activos; se recarga cada 10 s. | — |
-| Reservas | `/reservas` | Reservas con fecha/hora, personas y estado. | — |
-| Insumos | `/inventario` | Stock, vencimiento, proveedor; búsqueda, filtros y movimientos. | HU-02 |
-| Carta y recetas | `/carta` | Platos y cantidad de cada insumo por porción. | HU-03 |
-| Alertas | `/alertas` | Stock mínimo y vencimiento; marcar atendida o generar orden. | HU-04, HU-06 |
-| Predicción IA | `/prediccion` | Consumo estimado, cantidad sugerida, aceptar/ajustar. | HU-05 |
-| Kardex | `/movimientos` | Historial de entradas, salidas, mermas y ajustes. | HU-02 |
-| Órdenes de compra | `/compras` | Borrador → aprobación → envío por API → confirmación; línea de tiempo y QR. | HU-06, HU-07, HU-09 |
-| Recepción | `/recepcion` | Lectura del QR / código de barras y validación de cantidades. | HU-08 |
-| Proveedores | `/proveedores` | Contacto, URL y API key de cada proveedor. | HU-07 |
-| Usuarios | `/usuarios` | Alta (clave hasheada), cambio de rol, reseteo de clave. | HU-01 |
-| Reportes | `/reportes` | Pedidos, reservas, inventario, consumo, mermas y proyección de compras. | — |
+| Módulo | Ruta | HU |
+|--------|------|----|
+| Inicio | `/inicio` | — |
+| Pedidos (POS) — descuenta insumos por receta | `/pedidos` | HU-03 |
+| Cocina | `/cocina` | — |
+| Reservas | `/reservas` | — |
+| Insumos · Categorías · Proveedores (maestras) | `/insumos` `/categorias` `/proveedores` | HU-02, HU-07 |
+| Carta y recetas | `/carta` | HU-03 |
+| Alertas de stock mínimo y vencimiento | `/alertas` | HU-04, HU-06 |
+| Predicción IA | `/prediccion` | HU-05 |
+| Kardex | `/kardex` | HU-02 |
+| Órdenes de compra (API + trazabilidad + QR) | `/compras` | HU-06, HU-07, HU-09 |
+| Recepción por QR | `/recepcion` | HU-08 |
+| Usuarios y roles | `/usuarios` | HU-01 |
+| Reportes | `/reportes` | — |
 
 ### Roles (HU-01)
 
 | Rol | Módulos |
 |-----|---------|
-| Administrador | Todos. Es el único que aprueba órdenes de compra. |
-| Almacén | Insumos, Alertas, Kardex, Órdenes de compra (borradores), Recepción |
-| Cocina | Cocina, Insumos, Carta y recetas |
+| Administrador | Todos. Único que aprueba órdenes de compra y gestiona proveedores. |
+| Almacén | Insumos, Categorías, Alertas, Kardex, Órdenes de compra, Recepción |
+| Cocina | Cocina, Insumos (solo lectura), Carta y recetas |
 | Mesero / Empleado | Pedidos (POS), Reservas |
 
-Los permisos están en un solo lugar: [`util/Permisos.java`](src/main/java/com/calsoft/util/Permisos.java).
+El backend aplica los permisos en [`SecurityConfig.java`](backend/src/main/java/com/calsoft/seguridad/SecurityConfig.java);
+el frontend oculta del menú lo que el rol no puede usar.
 
-### API del proveedor simulado
+## Puesta en marcha (resumen)
 
-`POST /CalSoft/api/proveedor/ordenes` con la cabecera `X-Api-Key` (las claves
-de demostración están en la tabla `proveedores`). El formato JSON y las reglas
-están en [docs/HISTORIAS_USUARIO.md](docs/HISTORIAS_USUARIO.md#proveedor-simulado-api).
+1. **Backend** — en NetBeans abre la carpeta `backend` y pulsa **Run** (o `mvn spring-boot:run`).
+   Queda en http://localhost:8081
+2. **Frontend** — en una terminal:
+   ```bash
+   cd frontend
+   npm install
+   npm start
+   ```
+3. Abre **http://localhost:4200** y entra con `admin` / `1234`.
+
+El detalle (requisitos, clave de PostgreSQL, problemas comunes) está en [INSTALACION.md](INSTALACION.md).
 
 ## Seguridad
 
-- Contraseñas guardadas con **BCrypt** (nunca en texto plano).
-- Todas las páginas, salvo el login, exigen sesión iniciada (`AutenticacionFiltro`).
-- Cada rol solo entra a sus módulos; el menú oculta el resto.
-- La API del proveedor se autentica con API key (no usa la sesión).
-- Al iniciar sesión se crea una sesión nueva (evita fijación de sesión).
-- Cada formulario lleva un **token CSRF** que el filtro verifica.
-- Consultas SQL siempre con `PreparedStatement` (sin inyección SQL).
-- Toda la información del usuario se escapa en las JSP (`fn:escapeXml`) contra XSS.
-- Un usuario no puede eliminar su propia cuenta.
-
-## Cómo agregar un módulo nuevo
-
-1. **BD**: agrega la tabla en `src/main/resources/schema.sql`.
-2. **Modelo**: crea la clase en `modelo/`.
-3. **DAO**: crea `dao/<Modulo>DAO.java` con sus consultas.
-4. **Servlet**: crea `controlador/<Modulo>Servlet.java` con `@WebServlet("/<modulo>")`
-   extendiendo `ServletBase`.
-5. **Vista**: crea `WEB-INF/vistas/<modulo>.jsp` incluyendo la cabecera y el pie,
-   y agrega el enlace en `WEB-INF/vistas/plantilla/cabecera.jspf`.
+- Contraseñas con **BCrypt**; sesión **sin estado** con **JWT** (8 horas).
+- Cada ruta de la API exige el rol adecuado (Spring Security).
+- Validación de datos en el backend (`@Valid`) y en el frontend (formularios reactivos).
+- Consultas parametrizadas (JPA / JdbcTemplate): sin inyección SQL.
+- La API key de los proveedores nunca se devuelve en el JSON.
+- CORS restringido al origen del frontend.

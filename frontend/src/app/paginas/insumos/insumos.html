@@ -1,0 +1,195 @@
+<div class="d-flex flex-wrap justify-content-between align-items-end gap-3 mb-4">
+  <div>
+    <h1 class="h2 fw-bold mb-1">Insumos</h1>
+    <p class="text-body-secondary mb-0">Tabla maestra: stock, vencimiento, categoría y proveedor de cada insumo</p>
+  </div>
+  @if (puedeEditar()) {
+    <button type="button" class="btn btn-primary rounded-pill px-4" (click)="nuevo()">
+      <i class="bi bi-plus-lg me-1"></i>Nuevo insumo
+    </button>
+  }
+</div>
+
+<div class="row g-3 mb-4">
+  <div class="col-6 col-lg-3"><app-stat-card etiqueta="Insumos" [valor]="resumen().total" icono="box-seam" tono="primary" /></div>
+  <div class="col-6 col-lg-3"><app-stat-card etiqueta="Bajo stock" [valor]="resumen().bajo" icono="exclamation-triangle" tono="danger" /></div>
+  <div class="col-6 col-lg-3"><app-stat-card etiqueta="Por vencer / vencidos" [valor]="resumen().vencer" icono="hourglass-split" tono="warning" /></div>
+  <div class="col-6 col-lg-3"><app-stat-card etiqueta="Valor total" [valor]="'S/ ' + (resumen().valor | number: '1.2-2')" icono="wallet2" tono="success" /></div>
+</div>
+
+<!-- Búsqueda y filtros (HU-02) -->
+<form class="card card-body mb-3" (submit)="$event.preventDefault(); cargar()">
+  <div class="row g-2 align-items-end">
+    <div class="col-md-5">
+      <label for="q" class="form-label small text-body-secondary mb-1">Buscar</label>
+      <div class="input-group">
+        <span class="input-group-text bg-white"><i class="bi bi-search"></i></span>
+        <input id="q" class="form-control" placeholder="Nombre del insumo" [value]="q()" (input)="q.set($any($event.target).value)">
+      </div>
+    </div>
+    <div class="col-6 col-md-3">
+      <label for="cat" class="form-label small text-body-secondary mb-1">Categoría</label>
+      <select id="cat" class="form-select" (change)="categoriaId.set($any($event.target).value ? +$any($event.target).value : null)">
+        <option value="" [selected]="!categoriaId()">Todas</option>
+        @for (c of categorias(); track c.id) {
+          <option [value]="c.id" [selected]="categoriaId() === c.id">{{ c.nombre }}</option>
+        }
+      </select>
+    </div>
+    <div class="col-6 col-md-2">
+      <label for="est" class="form-label small text-body-secondary mb-1">Estado</label>
+      <select id="est" class="form-select" (change)="estado.set($any($event.target).value)">
+        <option value="" [selected]="!estado()">Todos</option>
+        @for (e of estados; track e) {
+          <option [value]="e" [selected]="estado() === e">{{ e }}</option>
+        }
+      </select>
+    </div>
+    <div class="col-md-2 d-flex gap-2">
+      <button type="submit" class="btn btn-primary flex-grow-1">Filtrar</button>
+      <button type="button" class="btn btn-outline-secondary" title="Limpiar filtros" (click)="limpiarFiltros()"><i class="bi bi-x-lg"></i></button>
+    </div>
+  </div>
+</form>
+
+<div class="card">
+  <div class="table-responsive">
+    <table class="table table-hover align-middle mb-0">
+      <thead>
+        <tr>
+          <th class="ps-4">Insumo</th><th>Categoría</th><th>Stock</th><th>Mínimo</th>
+          <th>Vence</th><th>Proveedor</th><th>Precio</th><th class="text-end pe-4">Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (i of lista(); track i.id) {
+          <tr>
+            <td class="ps-4 fw-medium">{{ i.nombre }}</td>
+            <td>{{ i.categoria?.nombre || '—' }}</td>
+            <td class="text-nowrap">
+              {{ i.stock }} {{ i.unidad }}
+              <span class="badge rounded-pill bg-{{ tono(i.estado) }}-subtle text-{{ tono(i.estado) }}-emphasis ms-1">{{ i.estado }}</span>
+            </td>
+            <td>{{ i.stockMinimo }}</td>
+            <td class="text-nowrap">{{ i.fechaVencimiento || '—' }}</td>
+            <td class="small">{{ i.proveedor?.nombre || '—' }}</td>
+            <td class="text-nowrap">S/ {{ i.precio | number: '1.2-2' }}</td>
+            <td class="pe-4">
+              <div class="d-flex justify-content-end gap-1">
+                @if (puedeEditar()) {
+                  <button type="button" class="btn btn-sm btn-primary rounded-pill" title="Movimiento de stock (entrada, merma, ajuste)"
+                          aria-label="Movimiento de stock" (click)="abrirMovimiento(i)">
+                    <i class="bi bi-arrow-left-right"></i>
+                  </button>
+                  <a class="btn btn-sm btn-outline-secondary rounded-pill" title="Ver kardex" [routerLink]="['/kardex']" [queryParams]="{ insumo: i.id }">
+                    <i class="bi bi-clock-history"></i>
+                  </a>
+                  <button type="button" class="btn btn-sm btn-outline-secondary rounded-pill" title="Editar" (click)="editar(i)">
+                    <i class="bi bi-pencil"></i>
+                  </button>
+                  <button type="button" class="btn btn-sm btn-outline-danger rounded-pill" title="Eliminar" (click)="eliminar(i)">
+                    <i class="bi bi-trash"></i>
+                  </button>
+                }
+              </div>
+            </td>
+          </tr>
+        } @empty {
+          <tr><td colspan="8" class="text-center text-body-secondary py-5">{{ cargando() ? 'Cargando…' : 'No hay insumos que coincidan.' }}</td></tr>
+        }
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Modal: crear / editar insumo -->
+@if (modalInsumo()) {
+  <app-modal [titulo]="editandoId() ? 'Editar insumo' : 'Nuevo insumo'" (cerrar)="modalInsumo.set(false)">
+    <form [formGroup]="form" (ngSubmit)="guardar()" novalidate>
+      <div class="row g-3">
+        <div class="col-12">
+          <label for="nombre" class="form-label">Insumo</label>
+          <input id="nombre" class="form-control" formControlName="nombre" placeholder="Ej. Pollo entero" [class.is-invalid]="invalido('nombre')">
+          <div class="invalid-feedback">El nombre es obligatorio.</div>
+        </div>
+        <div class="col-6">
+          <label for="categoriaId" class="form-label">Categoría</label>
+          <select id="categoriaId" class="form-select" formControlName="categoriaId" [class.is-invalid]="invalido('categoriaId')">
+            <option [ngValue]="null">Elige…</option>
+            @for (c of categorias(); track c.id) {
+              <option [ngValue]="c.id">{{ c.nombre }}</option>
+            }
+          </select>
+          <div class="invalid-feedback">Elige una categoría.</div>
+        </div>
+        <div class="col-6">
+          <label for="unidad" class="form-label">Unidad</label>
+          <input id="unidad" class="form-control" formControlName="unidad" placeholder="unidad / kg / l">
+        </div>
+        <div class="col-6">
+          <label for="stock" class="form-label">{{ editandoId() ? 'Stock actual' : 'Stock inicial' }}</label>
+          <input id="stock" type="number" min="0" step="0.001" class="form-control" formControlName="stock" [class.is-invalid]="invalido('stock')">
+          @if (editandoId()) {
+            <div class="form-text">Se cambia con el botón Movimiento (queda en el kardex).</div>
+          }
+        </div>
+        <div class="col-6">
+          <label for="stockMinimo" class="form-label">Stock mínimo</label>
+          <input id="stockMinimo" type="number" min="0" step="0.001" class="form-control" formControlName="stockMinimo" [class.is-invalid]="invalido('stockMinimo')">
+        </div>
+        <div class="col-6">
+          <label for="precio" class="form-label">Precio unitario (S/)</label>
+          <input id="precio" type="number" min="0" step="0.01" class="form-control" formControlName="precio" [class.is-invalid]="invalido('precio')">
+        </div>
+        <div class="col-6">
+          <label for="fechaVencimiento" class="form-label">Vencimiento</label>
+          <input id="fechaVencimiento" type="date" class="form-control" formControlName="fechaVencimiento">
+        </div>
+        <div class="col-12">
+          <label for="proveedorId" class="form-label">Proveedor habitual</label>
+          <select id="proveedorId" class="form-select" formControlName="proveedorId">
+            <option [ngValue]="null">— Ninguno —</option>
+            @for (p of proveedores(); track p.id) {
+              <option [ngValue]="p.id">{{ p.nombre }}</option>
+            }
+          </select>
+        </div>
+      </div>
+      <div class="d-flex justify-content-end gap-2 mt-4">
+        <button type="button" class="btn btn-outline-secondary rounded-pill px-4" (click)="modalInsumo.set(false)">Cancelar</button>
+        <button type="submit" class="btn btn-primary rounded-pill px-4">{{ editandoId() ? 'Guardar cambios' : 'Crear' }}</button>
+      </div>
+    </form>
+  </app-modal>
+}
+
+<!-- Modal: movimiento de stock -->
+@if (movimientoDe(); as ins) {
+  <app-modal [titulo]="'Movimiento: ' + ins.nombre + ' (stock ' + ins.stock + ' ' + ins.unidad + ')'" (cerrar)="movimientoDe.set(null)">
+    <form [formGroup]="formMov" (ngSubmit)="registrarMovimiento()" novalidate>
+      <div class="row g-3">
+        <div class="col-6">
+          <label for="tipo" class="form-label">Tipo</label>
+          <select id="tipo" class="form-select" formControlName="tipo">
+            <option value="ENTRADA">Entrada (compra)</option>
+            <option value="MERMA">Merma (dañado / vencido)</option>
+            <option value="AJUSTE">Ajuste (conteo físico)</option>
+          </select>
+        </div>
+        <div class="col-6">
+          <label for="cantidad" class="form-label">Cantidad</label>
+          <input id="cantidad" type="number" min="0" step="0.001" class="form-control" formControlName="cantidad">
+        </div>
+        <div class="col-12">
+          <label for="motivo" class="form-label">Motivo</label>
+          <input id="motivo" class="form-control" formControlName="motivo" maxlength="200" placeholder="Opcional">
+        </div>
+        <div class="col-12 small text-body-secondary">En <b>Ajuste</b>, la cantidad es el stock real contado: se registra la diferencia.</div>
+      </div>
+      <div class="d-flex justify-content-end gap-2 mt-4">
+        <button type="button" class="btn btn-outline-secondary rounded-pill px-4" (click)="movimientoDe.set(null)">Cancelar</button>
+        <button type="submit" class="btn btn-primary rounded-pill px-4">Registrar</button>
+      </div>
+    </form>
+  </app-modal>
+}

@@ -1,0 +1,89 @@
+<div class="d-flex flex-wrap justify-content-between align-items-end gap-3 mb-4">
+  <div>
+    <h1 class="h2 fw-bold mb-1">Reservas</h1>
+    <p class="text-body-secondary mb-0">Administración de reservas del restaurante</p>
+  </div>
+  <button type="button" class="btn btn-primary rounded-pill px-4" (click)="nuevo()">
+    <i class="bi bi-plus-lg me-1"></i>Nueva reserva
+  </button>
+</div>
+
+<div class="row g-3 mb-4">
+  <div class="col-6 col-lg-3"><app-stat-card etiqueta="Total" [valor]="resumen().total" icono="calendar-check" tono="primary" /></div>
+  <div class="col-6 col-lg-3"><app-stat-card etiqueta="Pendientes" [valor]="resumen().pendientes" icono="clock" tono="warning" /></div>
+  <div class="col-6 col-lg-3"><app-stat-card etiqueta="Confirmadas" [valor]="resumen().confirmadas" icono="check-circle" tono="success" /></div>
+  <div class="col-6 col-lg-3"><app-stat-card etiqueta="Canceladas" [valor]="resumen().canceladas" icono="x-circle" tono="danger" /></div>
+</div>
+
+<div class="card">
+  <div class="table-responsive">
+    <table class="table table-hover align-middle mb-0">
+      <thead>
+        <tr><th class="ps-4">Cliente</th><th>Teléfono</th><th>Fecha</th><th>Hora</th><th>Pers.</th><th>Mesa</th><th>Estado</th><th class="text-end pe-4">Acciones</th></tr>
+      </thead>
+      <tbody>
+        @for (r of reservas(); track r.id) {
+          <tr>
+            <td class="ps-4 fw-medium">{{ r.cliente }}</td>
+            <td>{{ r.telefono || '—' }}</td>
+            <td>{{ r.fecha }}</td>
+            <td>{{ r.hora.slice(0, 5) }}</td>
+            <td>{{ r.personas }}</td>
+            <td>{{ r.mesa }}</td>
+            <td><span class="badge rounded-pill bg-{{ tono(r.estado) }}-subtle text-{{ tono(r.estado) }}-emphasis">{{ r.estado }}</span></td>
+            <td class="pe-4">
+              <div class="d-flex justify-content-end align-items-center gap-2">
+                <select class="form-select form-select-sm rounded-pill select-estado" aria-label="Estado de la reserva"
+                        (change)="cambiarEstado(r, $any($event.target).value)">
+                  @for (e of estados; track e) {
+                    <option [value]="e" [selected]="e === r.estado">{{ e }}</option>
+                  }
+                </select>
+                <button type="button" class="btn btn-sm btn-outline-danger rounded-pill" (click)="eliminar(r)">Eliminar</button>
+              </div>
+            </td>
+          </tr>
+        } @empty {
+          <tr><td colspan="8" class="text-center text-body-secondary py-5">{{ cargando() ? 'Cargando…' : 'No hay reservas.' }}</td></tr>
+        }
+      </tbody>
+    </table>
+  </div>
+</div>
+
+@if (modalAbierto()) {
+  <app-modal titulo="Nueva reserva" (cerrar)="modalAbierto.set(false)">
+    <form [formGroup]="form" (ngSubmit)="registrar()" novalidate>
+      <div class="row g-3">
+        <div class="col-12">
+          <label for="cliente" class="form-label">Cliente</label>
+          <input id="cliente" class="form-control" formControlName="cliente" [class.is-invalid]="invalido('cliente')">
+        </div>
+        <div class="col-12">
+          <label for="telefono" class="form-label">Teléfono</label>
+          <input id="telefono" class="form-control" formControlName="telefono" placeholder="Opcional">
+        </div>
+        <div class="col-6">
+          <label for="fecha" class="form-label">Fecha</label>
+          <input id="fecha" type="date" class="form-control" formControlName="fecha" [class.is-invalid]="invalido('fecha')">
+        </div>
+        <div class="col-6">
+          <label for="hora" class="form-label">Hora</label>
+          <input id="hora" type="time" class="form-control" formControlName="hora" [class.is-invalid]="invalido('hora')">
+        </div>
+        <div class="col-6">
+          <label for="personas" class="form-label">Personas</label>
+          <input id="personas" type="number" min="1" class="form-control" formControlName="personas" [class.is-invalid]="invalido('personas')">
+        </div>
+        <div class="col-6">
+          <label for="mesa" class="form-label">Mesa</label>
+          <input id="mesa" type="number" min="1" class="form-control" formControlName="mesa" [class.is-invalid]="invalido('mesa')">
+        </div>
+      </div>
+      <div class="d-flex justify-content-end gap-2 mt-4">
+        <button type="button" class="btn btn-outline-secondary rounded-pill px-4" (click)="modalAbierto.set(false)">Cancelar</button>
+        <button type="submit" class="btn btn-primary rounded-pill px-4">Registrar</button>
+      </div>
+    </form>
+  </app-modal>
+}

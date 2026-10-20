@@ -1,0 +1,35 @@
+<div class="mb-4">
+  <h1 class="h2 fw-bold mb-1">Cocina</h1>
+  <p class="text-body-secondary mb-0">Pedidos activos en preparación · se actualiza cada 10 s</p>
+</div>
+
+<div class="row g-4">
+  @for (col of [
+    { titulo: 'Por preparar', lista: porPreparar(), tono: 'warning', estado: 'En cocina', boton: 'A cocina', icono: 'arrow-right', clase: 'btn-primary' },
+    { titulo: 'En preparación', lista: enPreparacion(), tono: 'info', estado: 'Entregado', boton: 'Entregar', icono: 'check-lg', clase: 'btn-success' }
+  ]; track col.titulo) {
+    <div class="col-lg-6">
+      <div class="card h-100"><div class="card-body">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <h2 class="h5 fw-semibold mb-0">{{ col.titulo }}</h2>
+          <span class="badge rounded-pill bg-{{ col.tono }}-subtle text-{{ col.tono }}-emphasis">{{ col.lista.length }}</span>
+        </div>
+        <ul class="list-group gap-2">
+          @for (p of col.lista; track p.id) {
+            <li class="list-group-item border rounded-3 d-flex justify-content-between align-items-start gap-3">
+              <div>
+                <div class="fw-semibold">{{ p.producto }} <span class="text-body-tertiary">× {{ p.cantidad }}</span></div>
+                <div class="small text-body-secondary">Mesa {{ p.mesa }} · {{ p.cliente }} · Mesero: {{ p.mesero }}</div>
+              </div>
+              <button type="button" class="btn btn-sm rounded-pill text-nowrap {{ col.clase }}" (click)="avanzar(p, col.estado)">
+                <i class="bi bi-{{ col.icono }} me-1"></i>{{ col.boton }}
+              </button>
+            </li>
+          } @empty {
+            <li class="list-group-item border-0 text-center text-body-tertiary py-4">Sin pedidos.</li>
+          }
+        </ul>
+      </div></div>
+    </div>
+  }
+</div>

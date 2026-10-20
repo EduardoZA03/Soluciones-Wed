@@ -1,0 +1,57 @@
+<!-- Barra superior (solo móvil) -->
+<header class="topbar">
+  <div class="marca">
+    <img src="logo.png" alt="">
+    <span class="marca-nombre fs-5">CalSoft</span>
+  </div>
+  <button type="button" class="btn btn-light" aria-label="Abrir menú" (click)="menuAbierto.set(true)">
+    <i class="bi bi-list fs-5"></i>
+  </button>
+</header>
+<div class="fondo-menu" [class.abierto]="menuAbierto()" (click)="menuAbierto.set(false)"></div>
+
+<!-- Menú lateral: cada rol ve solo sus módulos -->
+<aside class="sidebar" [class.abierto]="menuAbierto()" aria-label="Menú principal">
+  <div class="marca px-4 py-3 border-bottom">
+    <img src="logo.png" alt="CalSoft">
+    <div>
+      <div class="marca-nombre">CalSoft</div>
+      <div class="marca-sub">La Crianza Arequipeña</div>
+    </div>
+  </div>
+
+  <nav class="nav flex-column flex-nowrap gap-1 p-3 menu-scroll">
+    @for (grupo of menu(); track grupo.titulo) {
+      @if (grupo.titulo) {
+        <div class="nav-grupo">{{ grupo.titulo }}</div>
+      }
+      @for (item of grupo.items; track item.ruta) {
+        <a class="nav-link" [routerLink]="item.ruta" routerLinkActive="active">
+          <i class="bi bi-{{ item.icono }}"></i>{{ item.texto }}
+          @if (item.modulo === 'alertas' && alertasPendientes() > 0) {
+            <span class="badge rounded-pill text-bg-danger ms-auto">{{ alertasPendientes() }}</span>
+          }
+        </a>
+      }
+    }
+  </nav>
+
+  <div class="border-top p-3">
+    <div class="d-flex align-items-center gap-3 px-2">
+      <div class="avatar">{{ inicial() }}</div>
+      <div class="flex-grow-1 lh-sm text-truncate">
+        <div class="fw-medium text-truncate">{{ auth.sesion()?.usuario }}</div>
+        <div class="small text-body-secondary">{{ auth.sesion()?.rol }}</div>
+      </div>
+      <button type="button" class="btn btn-sm btn-light" title="Cerrar sesión" aria-label="Cerrar sesión" (click)="auth.logout()">
+        <i class="bi bi-box-arrow-right"></i>
+      </button>
+    </div>
+  </div>
+</aside>
+
+<main class="contenido">
+  <div class="container-xl px-3 px-lg-5 py-4 py-lg-5">
+    <router-outlet />
+  </div>
+</main>
