@@ -65,15 +65,32 @@ Ese archivo no se sube a GitHub. También sirven las variables de entorno
 
 ## 5. Ejecutar el backend (NetBeans)
 
-1. **File → Open Project…** → selecciona la carpeta **`backend`** (ícono de taza ☕).
+1. **File → Open Project…** → entra a la carpeta del repositorio y selecciona la
+   subcarpeta **`backend`** (no la carpeta raíz). Debe verse con el ícono de
+   taza ☕ y el nombre **CalSoft - Backend**.
+   > Si tenías abierta una versión anterior del proyecto (la carpeta raíz),
+   > ciérrala antes: clic derecho → **Close**. Si no, NetBeans dirá
+   > *"there is no POM in this directory"*.
 2. La primera vez descarga las dependencias (1–3 minutos).
-3. Clic derecho en el proyecto → **Run** (o `F6`). Si pregunta la clase
-   principal, elige `com.calsoft.CalSoftApplication`.
+3. Clic derecho en el proyecto → **Run** (o `F6`) **una sola vez**. Si pregunta
+   por un servidor (Tomcat, GlassFish), no elijas ninguno: Spring Boot trae el suyo.
 4. En la pestaña **Output** debe aparecer:
    ```
    Tomcat started on port 8081
+   Started CalSoftApplication
    CalSoft: base de datos lista
    ```
+5. **Deja esa ejecución encendida** mientras uses la app.
+
+### Detener o reiniciar el backend
+
+- **Detener:** en la pestaña de **Output** donde corre, pulsa el botón cuadrado
+  rojo **Stop** (o **Window → Run → Stop**).
+- **Reiniciar** (por ejemplo, después de cambiar código): primero **Stop** y
+  después **F6**.
+- Si pulsas **F6 con el backend ya encendido**, la nueva ejecución falla con
+  *"Port 8081 was already in use"*. No es un error del proyecto: el anterior
+  sigue funcionando. Detén uno de los dos.
 
 Sin NetBeans, desde una terminal en `backend`:
 
@@ -86,16 +103,40 @@ mvn spring-boot:run
 
 ## 6. Ejecutar el frontend (Angular)
 
-En una terminal (PowerShell, CMD o la de VS Code):
+Abre una terminal **aparte** (el backend sigue corriendo en NetBeans) y entra a
+la carpeta `frontend` del repositorio. Ejemplo si lo clonaste en `D:\terminal\CalSoft-Java`:
 
-```bash
-cd frontend
+**CMD** (Símbolo del sistema) — usa `cd /d` para poder cambiar de unidad (`C:` → `D:`):
+
+```bat
+cd /d D:\terminal\CalSoft-Java\frontend
 npm install
 npm start
 ```
 
-`npm install` solo hace falta la primera vez. Cuando diga
-`Local: http://localhost:4200/`, abre esa dirección y entra con **`admin` / `1234`**.
+**PowerShell** o la terminal de VS Code:
+
+```powershell
+cd D:\terminal\CalSoft-Java\frontend
+npm install
+npm start
+```
+
+> ⚠️ En CMD, `cd D:\...` **sin `/d`** no cambia de unidad y te deja en
+> `C:\Users\...`; npm dirá *"Could not read package.json"*. Revisa que la
+> línea de la terminal termine en `...\frontend>` antes de `npm start`.
+
+`npm install` solo hace falta la primera vez (y cuando cambie `package.json`).
+Cuando diga `Local: http://localhost:4200/`, abre esa dirección y entra con
+**`admin` / `1234`**. **Deja esa terminal abierta**; para detener el frontend
+pulsa `Ctrl + C`.
+
+### Orden para iniciar cada vez
+
+1. PostgreSQL encendido (se inicia solo con Windows).
+2. **Backend:** NetBeans → proyecto *CalSoft - Backend* → **F6** → esperar `CalSoft: base de datos lista`.
+3. **Frontend:** terminal en `frontend` → `npm start` → esperar `http://localhost:4200/`.
+4. Navegador → **http://localhost:4200**.
 
 El frontend envía las llamadas `/api/...` al backend gracias a
 `frontend/proxy.conf.json`, así que **los dos tienen que estar encendidos**.
@@ -145,7 +186,11 @@ Empezar de cero (detén el backend antes):
 
 | Síntoma | Solución |
 |---------|----------|
-| `Port 8081 was already in use` | Otro backend sigue abierto: ciérralo, o cambia el puerto con la variable `PORT` (y en `frontend/proxy.conf.json`). |
+| `Port 8081 was already in use` | El backend ya está encendido (se pulsó F6 dos veces). Detén el anterior con **Stop** en Output y vuelve a pulsar F6. Si no lo encuentras, cierra NetBeans o termina el proceso `java` en el Administrador de tareas. |
+| `there is no POM in this directory` | NetBeans tiene abierta la carpeta raíz. Ciérrala y abre la subcarpeta **`backend`**. |
+| `no se ha encontrado o cargado la clase principal ${start-class}` | Tienes una versión vieja del proyecto: haz `git pull`. |
+| `npm error ... Could not read package.json` | La terminal no está en la carpeta `frontend`. En CMD usa `cd /d D:\...\frontend`. |
+| `Port 4200 is already in use` | El frontend ya está abierto en otra terminal: usa esa, o ciérrala con `Ctrl + C`. |
 | `la autentificación password falló para el usuario «postgres»` | Pon tu clave en `backend/application-local.properties` (paso 4). |
 | `Connection refused` a PostgreSQL | `Start-Service postgresql-x64-17` |
 | En el login: "No se pudo conectar con el servidor" | El backend no está encendido (paso 5). |

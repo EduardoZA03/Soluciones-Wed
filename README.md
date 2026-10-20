@@ -112,15 +112,19 @@ el frontend oculta del menú lo que el rol no puede usar.
 
 ## Puesta en marcha (resumen)
 
-1. **Backend** — en NetBeans abre la carpeta `backend` y pulsa **Run** (o `mvn spring-boot:run`).
-   Queda en http://localhost:8081
-2. **Frontend** — en una terminal:
-   ```bash
-   cd frontend
+1. **Backend** — en NetBeans: **File → Open Project** → subcarpeta **`backend`**
+   (no la raíz) → **F6** una sola vez → esperar `CalSoft: base de datos lista`.
+   Queda en http://localhost:8081. Para reiniciarlo: **Stop** y luego F6.
+2. **Frontend** — en otra terminal, dentro de `frontend`:
+   ```bat
+   cd /d D:\ruta\del\repo\frontend
    npm install
    npm start
    ```
+   (`cd /d` es para CMD; en PowerShell basta `cd`). `npm install` solo la primera vez.
 3. Abre **http://localhost:4200** y entra con `admin` / `1234`.
+
+Los dos (backend y frontend) tienen que quedar encendidos mientras uses la app.
 
 El detalle (requisitos, clave de PostgreSQL, problemas comunes) está en [INSTALACION.md](INSTALACION.md).
 
