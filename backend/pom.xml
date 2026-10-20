@@ -25,6 +25,8 @@
 
     <properties>
         <java.version>17</java.version>
+        <!-- Clase que arranca la app: la usan NetBeans (Run / F6) y spring-boot:run -->
+        <start-class>com.calsoft.CalSoftApplication</start-class>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <jjwt.version>0.12.6</jjwt.version>
     </properties>
