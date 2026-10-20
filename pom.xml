@@ -82,6 +82,27 @@
             <version>1.11.3</version>
         </dependency>
 
+        <!-- Escáner de QR / código de barras con la cámara (página de Recepción) -->
+        <dependency>
+            <groupId>org.webjars.npm</groupId>
+            <artifactId>html5-qrcode</artifactId>
+            <version>2.3.8</version>
+        </dependency>
+
+        <!-- JSON para la API con el proveedor -->
+        <dependency>
+            <groupId>com.google.code.gson</groupId>
+            <artifactId>gson</artifactId>
+            <version>2.11.0</version>
+        </dependency>
+
+        <!-- Generación de códigos QR de las órdenes de compra -->
+        <dependency>
+            <groupId>com.google.zxing</groupId>
+            <artifactId>core</artifactId>
+            <version>3.5.3</version>
+        </dependency>
+
         <!-- Hash de contraseñas con BCrypt -->
         <dependency>
             <groupId>org.mindrot</groupId>

@@ -1,7 +1,9 @@
 package com.calsoft.controlador;
 
 import com.calsoft.dao.PedidoDAO;
+import com.calsoft.dao.PlatoDAO;
 import com.calsoft.modelo.Pedido;
+import com.calsoft.servicio.InventarioService;
 import com.calsoft.util.Formulario;
 import com.calsoft.util.ValidacionException;
 import jakarta.servlet.ServletException;
@@ -16,13 +18,18 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.TreeSet;
 
-/** Registro de pedidos, cambio de estado y resumen. */
+/**
+ * POS: registro de pedidos (ventas), cambio de estado y resumen.
+ * Al registrar un pedido se descuentan sus insumos según la receta (HU-03).
+ */
 @WebServlet("/pedidos")
 public class PedidoServlet extends ServletBase {
 
     private static final long serialVersionUID = 1L;
 
     private final PedidoDAO pedidoDAO = new PedidoDAO();
+    private final PlatoDAO platoDAO = new PlatoDAO();
+    private final InventarioService inventarioService = new InventarioService();
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp)
@@ -35,6 +42,7 @@ public class PedidoServlet extends ServletBase {
         List<Pedido> pedidos = new ArrayList<>();
         try {
             pedidos = pedidoDAO.listar();
+            req.setAttribute("platos", platoDAO.listar(true));
         } catch (SQLException e) {
             errorServidor(req, "LISTAR PEDIDOS", e);
         }
@@ -79,8 +87,8 @@ public class PedidoServlet extends ServletBase {
         try {
             switch (accion) {
                 case "crear":
-                    crear(f);
-                    exito(req, "Pedido registrado");
+                    String resumen = crear(req, f);
+                    exito(req, "Pedido registrado. " + resumen);
                     break;
                 case "cambiar":
                     cambiar(req, f.id());
@@ -110,14 +118,14 @@ public class PedidoServlet extends ServletBase {
         redirigir(req, resp, ruta);
     }
 
-    private void crear(Formulario f) throws ValidacionException, SQLException {
+    private String crear(HttpServletRequest req, Formulario f) throws ValidacionException, SQLException {
         Pedido p = new Pedido();
         p.setCliente(f.texto("cliente"));
         p.setMesero(f.texto("mesero"));
-        p.setProducto(f.texto("producto"));
-        if (p.getCliente().isEmpty() || p.getMesero().isEmpty() || p.getProducto().isEmpty()) {
-            throw new ValidacionException("Cliente, mesero y producto son obligatorios");
+        if (p.getCliente().isEmpty() || p.getMesero().isEmpty()) {
+            throw new ValidacionException("Cliente y mesero son obligatorios");
         }
+        p.setPlatoId(f.entero("plato_id", 1, "Elige un plato de la carta"));
         p.setCantidad(f.entero("cantidad", 1, "La cantidad debe ser un entero positivo"));
         p.setMesa(f.entero("mesa", 1, "La mesa debe ser un entero positivo"));
         String estado = f.texto("estado", "Pendiente");
@@ -125,7 +133,7 @@ public class PedidoServlet extends ServletBase {
             throw new ValidacionException("Estado inválido");
         }
         p.setEstado(estado);
-        pedidoDAO.crear(p);
+        return inventarioService.registrarPedido(p, nombreUsuario(req));
     }
 
     /** Pasa el pedido al siguiente estado del ciclo. */

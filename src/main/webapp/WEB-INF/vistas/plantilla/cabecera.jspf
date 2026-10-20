@@ -48,14 +48,43 @@
             </div>
         </div>
 
-        <nav class="nav flex-column gap-1 p-3 flex-grow-1">
+        <%-- Cada rol ve solo los módulos que puede usar (HU-01) --%>
+        <c:set var="u" value="${sessionScope.usuario}"/>
+        <nav class="nav flex-column gap-1 p-3 flex-grow-1 menu-scroll">
             <a class="nav-link ${activo == 'dashboard' ? 'active' : ''}" href="${ctx}/dashboard"><i class="bi bi-grid-1x2"></i>Inicio</a>
-            <a class="nav-link ${activo == 'pedidos' ? 'active' : ''}" href="${ctx}/pedidos"><i class="bi bi-clipboard-check"></i>Pedidos</a>
-            <a class="nav-link ${activo == 'reservas' ? 'active' : ''}" href="${ctx}/reservas"><i class="bi bi-calendar-event"></i>Reservas</a>
-            <a class="nav-link ${activo == 'inventario' ? 'active' : ''}" href="${ctx}/inventario"><i class="bi bi-box-seam"></i>Inventario</a>
-            <a class="nav-link ${activo == 'cocina' ? 'active' : ''}" href="${ctx}/cocina"><i class="bi bi-egg-fried"></i>Cocina</a>
-            <a class="nav-link ${activo == 'usuarios' ? 'active' : ''}" href="${ctx}/usuarios"><i class="bi bi-people"></i>Usuarios</a>
-            <a class="nav-link ${activo == 'reportes' ? 'active' : ''}" href="${ctx}/reportes"><i class="bi bi-bar-chart-line"></i>Reportes</a>
+
+            <c:if test="${u.puede('pedidos') or u.puede('cocina') or u.puede('reservas')}">
+                <div class="nav-grupo">Operación</div>
+            </c:if>
+            <c:if test="${u.puede('pedidos')}"><a class="nav-link ${activo == 'pedidos' ? 'active' : ''}" href="${ctx}/pedidos"><i class="bi bi-clipboard-check"></i>Pedidos (POS)</a></c:if>
+            <c:if test="${u.puede('cocina')}"><a class="nav-link ${activo == 'cocina' ? 'active' : ''}" href="${ctx}/cocina"><i class="bi bi-egg-fried"></i>Cocina</a></c:if>
+            <c:if test="${u.puede('reservas')}"><a class="nav-link ${activo == 'reservas' ? 'active' : ''}" href="${ctx}/reservas"><i class="bi bi-calendar-event"></i>Reservas</a></c:if>
+
+            <c:if test="${u.puede('inventario') or u.puede('alertas')}">
+                <div class="nav-grupo">Inventario</div>
+            </c:if>
+            <c:if test="${u.puede('inventario')}"><a class="nav-link ${activo == 'inventario' ? 'active' : ''}" href="${ctx}/inventario"><i class="bi bi-box-seam"></i>Insumos</a></c:if>
+            <c:if test="${u.puede('carta')}"><a class="nav-link ${activo == 'carta' ? 'active' : ''}" href="${ctx}/carta"><i class="bi bi-journal-text"></i>Carta y recetas</a></c:if>
+            <c:if test="${u.puede('alertas')}">
+                <a class="nav-link ${activo == 'alertas' ? 'active' : ''}" href="${ctx}/alertas"><i class="bi bi-bell"></i>Alertas
+                    <c:if test="${alertasPendientes > 0}"><span class="badge rounded-pill text-bg-danger ms-auto">${alertasPendientes}</span></c:if>
+                </a>
+            </c:if>
+            <c:if test="${u.puede('prediccion')}"><a class="nav-link ${activo == 'prediccion' ? 'active' : ''}" href="${ctx}/prediccion"><i class="bi bi-stars"></i>Predicción IA</a></c:if>
+            <c:if test="${u.puede('movimientos')}"><a class="nav-link ${activo == 'movimientos' ? 'active' : ''}" href="${ctx}/movimientos"><i class="bi bi-arrow-left-right"></i>Kardex</a></c:if>
+
+            <c:if test="${u.puede('compras')}">
+                <div class="nav-grupo">Abastecimiento</div>
+                <a class="nav-link ${activo == 'compras' ? 'active' : ''}" href="${ctx}/compras"><i class="bi bi-cart-check"></i>Órdenes de compra</a>
+            </c:if>
+            <c:if test="${u.puede('recepcion')}"><a class="nav-link ${activo == 'recepcion' ? 'active' : ''}" href="${ctx}/recepcion"><i class="bi bi-qr-code-scan"></i>Recepción</a></c:if>
+            <c:if test="${u.puede('proveedores')}"><a class="nav-link ${activo == 'proveedores' ? 'active' : ''}" href="${ctx}/proveedores"><i class="bi bi-truck"></i>Proveedores</a></c:if>
+
+            <c:if test="${u.puede('usuarios') or u.puede('reportes')}">
+                <div class="nav-grupo">Administración</div>
+            </c:if>
+            <c:if test="${u.puede('usuarios')}"><a class="nav-link ${activo == 'usuarios' ? 'active' : ''}" href="${ctx}/usuarios"><i class="bi bi-people"></i>Usuarios</a></c:if>
+            <c:if test="${u.puede('reportes')}"><a class="nav-link ${activo == 'reportes' ? 'active' : ''}" href="${ctx}/reportes"><i class="bi bi-bar-chart-line"></i>Reportes</a></c:if>
         </nav>
 
         <div class="border-top p-3">

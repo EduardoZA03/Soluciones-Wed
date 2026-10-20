@@ -85,6 +85,12 @@ h1, h2, h3, h4, h5, .font-display {
 .sidebar .nav-link.active { background: var(--cs-brand-soft); color: var(--cs-brand); font-weight: 600; }
 .sidebar .nav-link.active i { color: var(--cs-brand); }
 
+.nav-grupo {
+    margin: 0.75rem 0.75rem 0.15rem; font-size: 0.65rem; font-weight: 600;
+    text-transform: uppercase; letter-spacing: 0.1em; color: #94a3b8;
+}
+.menu-scroll { overflow-y: auto; min-height: 0; }
+
 .avatar {
     width: 36px; height: 36px; flex-shrink: 0; border-radius: 50%;
     background: #e2e8f0; color: #334155; font-size: 0.75rem; font-weight: 600;
@@ -117,6 +123,21 @@ h1, h2, h3, h4, h5, .font-display {
     letter-spacing: 0.05em; color: #64748b; white-space: nowrap;
 }
 .select-estado { width: auto; min-width: 8.5rem; }
+
+.cantidad-receta { max-width: 6rem; }
+.cantidad-orden { width: 7rem; }
+
+/* ---------- Órdenes: QR y línea de tiempo ---------- */
+.qr-orden { width: 200px; border-radius: 0.5rem; }
+.linea-tiempo-item { position: relative; padding: 0 0 1rem 1.5rem; border-left: 2px solid #e2e8f0; margin-left: 0.4rem; }
+.linea-tiempo-item:last-child { border-left-color: transparent; padding-bottom: 0; }
+.linea-tiempo-punto {
+    position: absolute; left: -0.45rem; top: 0.2rem; width: 0.8rem; height: 0.8rem;
+    border-radius: 50%; border: 2px solid #fff; box-shadow: 0 0 0 1px #e2e8f0;
+}
+
+/* ---------- Recepción ---------- */
+.lector-qr { max-width: 420px; margin: 0 auto; }
 
 /* ---------- Reportes ---------- */
 .progress-delgada { height: 10px; }

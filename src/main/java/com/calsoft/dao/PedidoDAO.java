@@ -6,6 +6,8 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Statement;
+import java.sql.Types;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -37,18 +39,36 @@ public class PedidoDAO {
         return lista;
     }
 
-    public void crear(Pedido p) throws SQLException {
-        String sql = "INSERT INTO pedidos (cliente, mesero, producto, cantidad, mesa, estado) "
-                + "VALUES (?, ?, ?, ?, ?, ?)";
-        try (Connection cn = Conexion.obtener();
-             PreparedStatement ps = cn.prepareStatement(sql)) {
+    /** Registra el pedido (venta del POS) y devuelve su id. */
+    public int crear(Connection cn, Pedido p) throws SQLException {
+        String sql = "INSERT INTO pedidos (cliente, mesero, producto, cantidad, mesa, estado, plato_id) "
+                + "VALUES (?, ?, ?, ?, ?, ?, ?)";
+        try (PreparedStatement ps = cn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
             ps.setString(1, p.getCliente());
             ps.setString(2, p.getMesero());
             ps.setString(3, p.getProducto());
             ps.setInt(4, p.getCantidad());
             ps.setInt(5, p.getMesa());
             ps.setString(6, p.getEstado());
+            if (p.getPlatoId() == null) {
+                ps.setNull(7, Types.INTEGER);
+            } else {
+                ps.setInt(7, p.getPlatoId());
+            }
             ps.executeUpdate();
+            try (ResultSet rs = ps.getGeneratedKeys()) {
+                rs.next();
+                return rs.getInt("id");
+            }
+        }
+    }
+
+    /** Marca el pedido como ya procesado en el inventario, para no descontarlo dos veces. */
+    public boolean marcarDescontado(Connection cn, int id) throws SQLException {
+        String sql = "UPDATE pedidos SET stock_descontado = true WHERE id = ? AND NOT stock_descontado";
+        try (PreparedStatement ps = cn.prepareStatement(sql)) {
+            ps.setInt(1, id);
+            return ps.executeUpdate() > 0;
         }
     }
 
@@ -89,6 +109,9 @@ public class PedidoDAO {
         p.setCantidad(rs.getInt("cantidad"));
         p.setMesa(rs.getInt("mesa"));
         p.setEstado(rs.getString("estado"));
+        int plato = rs.getInt("plato_id");
+        p.setPlatoId(rs.wasNull() ? null : plato);
+        p.setStockDescontado(rs.getBoolean("stock_descontado"));
         return p;
     }
 }

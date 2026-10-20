@@ -1,5 +1,6 @@
 package com.calsoft.controlador;
 
+import com.calsoft.dao.AlertaDAO;
 import com.calsoft.dao.PedidoDAO;
 import com.calsoft.dao.ReporteDAO;
 import com.calsoft.dao.ReservaDAO;
@@ -19,11 +20,13 @@ public class DashboardServlet extends ServletBase {
     private final ReporteDAO reporteDAO = new ReporteDAO();
     private final PedidoDAO pedidoDAO = new PedidoDAO();
     private final ReservaDAO reservaDAO = new ReservaDAO();
+    private final AlertaDAO alertaDAO = new AlertaDAO();
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp)
             throws ServletException, IOException {
         try {
+            alertaDAO.evaluarTodo();
             req.setAttribute("stats", reporteDAO.resumen());
             req.setAttribute("pedidosRecientes", pedidoDAO.listarRecientes(5));
             req.setAttribute("reservasProximas", reservaDAO.listarProximas(5));

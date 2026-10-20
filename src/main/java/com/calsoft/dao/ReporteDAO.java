@@ -13,6 +13,9 @@ import java.util.List;
 /** Consultas de agregación sobre las tablas del sistema. */
 public class ReporteDAO {
 
+    private final OrdenCompraDAO ordenDAO = new OrdenCompraDAO();
+    private final MovimientoDAO movimientoDAO = new MovimientoDAO();
+
     public Resumen resumen() throws SQLException {
         Resumen r = new Resumen();
         try (Connection cn = Conexion.obtener()) {
@@ -68,6 +71,19 @@ public class ReporteDAO {
             r.setTopProductos(conteos(cn,
                     "SELECT producto, SUM(cantidad) AS total FROM pedidos "
                     + "GROUP BY producto ORDER BY total DESC LIMIT 5"));
+
+            // Inventario con IA e interoperabilidad: alertas, órdenes, consumo y mermas (30 días)
+            try (PreparedStatement ps = cn.prepareStatement(
+                    "SELECT COUNT(*) FROM alertas WHERE estado = 'Pendiente'");
+                 ResultSet rs = ps.executeQuery()) {
+                rs.next();
+                r.setAlertasPendientes(rs.getInt(1));
+            }
+            r.setOrdenesEnCurso(ordenDAO.contarEnCurso(cn));
+            r.setOrdenesPorEstado(ordenDAO.contarPorEstado(cn));
+            r.setTopConsumo(movimientoDAO.topConsumo(cn, 30, 5));
+            r.setConsumo30(movimientoDAO.valorPorTipo(cn, "SALIDA", 30));
+            r.setMermas30(movimientoDAO.valorPorTipo(cn, "MERMA", 30));
         }
         return r;
     }

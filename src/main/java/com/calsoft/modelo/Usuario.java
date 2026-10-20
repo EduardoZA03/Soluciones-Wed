@@ -1,5 +1,6 @@
 package com.calsoft.modelo;
 
+import com.calsoft.util.Permisos;
 import java.io.Serializable;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -12,7 +13,8 @@ public class Usuario implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
-    public static final List<String> ROLES = List.of("Administrador", "Mesero", "Cocina", "Empleado");
+    public static final List<String> ROLES = List.of(Permisos.ADMIN, Permisos.ALMACEN, Permisos.COCINA,
+            Permisos.MESERO, Permisos.EMPLEADO);
 
     private int id;
     private String usuario;
@@ -49,6 +51,15 @@ public class Usuario implements Serializable {
 
     public void setCreadoEn(LocalDateTime creadoEn) {
         this.creadoEn = creadoEn;
+    }
+
+    /** true si el rol del usuario puede entrar al módulo. Uso en JSP: ${usuario.puede('pedidos')} */
+    public boolean puede(String modulo) {
+        return Permisos.permitido(rol, modulo);
+    }
+
+    public boolean isPuedeAprobar() {
+        return Permisos.puedeAprobar(rol);
     }
 
     /** Fecha de creación en formato yyyy-MM-dd, para mostrar en tablas. */

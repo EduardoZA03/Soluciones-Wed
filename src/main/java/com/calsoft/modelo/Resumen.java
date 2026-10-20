@@ -25,6 +25,79 @@ public class Resumen {
     private List<Conteo> usuariosPorRol = new ArrayList<>();
     private List<Conteo> topProductos = new ArrayList<>();
 
+    // Inventario con IA e interoperabilidad
+    private int alertasPendientes;
+    private int ordenesEnCurso;
+    private BigDecimal mermas30 = BigDecimal.ZERO;
+    private BigDecimal consumo30 = BigDecimal.ZERO;
+    private List<Conteo> topConsumo = new ArrayList<>();
+    private List<Conteo> ordenesPorEstado = new ArrayList<>();
+
+    public int getAlertasPendientes() {
+        return alertasPendientes;
+    }
+
+    public void setAlertasPendientes(int alertasPendientes) {
+        this.alertasPendientes = alertasPendientes;
+    }
+
+    public int getOrdenesEnCurso() {
+        return ordenesEnCurso;
+    }
+
+    public void setOrdenesEnCurso(int ordenesEnCurso) {
+        this.ordenesEnCurso = ordenesEnCurso;
+    }
+
+    public BigDecimal getMermas30() {
+        return mermas30;
+    }
+
+    public void setMermas30(BigDecimal mermas30) {
+        this.mermas30 = mermas30;
+    }
+
+    public String getMermas30Texto() {
+        return Numeros.soles(mermas30);
+    }
+
+    public BigDecimal getConsumo30() {
+        return consumo30;
+    }
+
+    public void setConsumo30(BigDecimal consumo30) {
+        this.consumo30 = consumo30;
+    }
+
+    public String getConsumo30Texto() {
+        return Numeros.soles(consumo30);
+    }
+
+    /** Insumos más consumidos en 30 días (valor en soles). */
+    public List<Conteo> getTopConsumo() {
+        return topConsumo;
+    }
+
+    public void setTopConsumo(List<Conteo> topConsumo) {
+        this.topConsumo = topConsumo;
+    }
+
+    public int getMaxTopConsumo() {
+        int max = 1;
+        for (Conteo c : topConsumo) {
+            max = Math.max(max, c.getCantidad());
+        }
+        return max;
+    }
+
+    public List<Conteo> getOrdenesPorEstado() {
+        return ordenesPorEstado;
+    }
+
+    public void setOrdenesPorEstado(List<Conteo> ordenesPorEstado) {
+        this.ordenesPorEstado = ordenesPorEstado;
+    }
+
     public int getPedidosTotal() {
         return pedidosTotal;
     }

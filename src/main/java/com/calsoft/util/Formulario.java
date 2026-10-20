@@ -62,6 +62,29 @@ public final class Formulario {
         }
     }
 
+    /** Decimal obligatorio y mayor que cero (cantidades de recetas, movimientos, órdenes). */
+    public BigDecimal positivo(String nombre, String mensaje) throws ValidacionException {
+        try {
+            BigDecimal d = new BigDecimal(texto(nombre));
+            if (d.signum() <= 0) {
+                throw new ValidacionException(mensaje);
+            }
+            return d;
+        } catch (NumberFormatException e) {
+            throw new ValidacionException(mensaje);
+        }
+    }
+
+    /** Entero opcional (p. ej. un select con "— ninguno —"): null si viene vacío. */
+    public Integer idOpcional(String nombre) throws ValidacionException {
+        return texto(nombre).isEmpty() ? null : entero(nombre, 1, "Selección inválida");
+    }
+
+    /** Fecha opcional: null si viene vacía. */
+    public LocalDate fechaOpcional(String nombre, String mensaje) throws ValidacionException {
+        return texto(nombre).isEmpty() ? null : fecha(nombre, mensaje);
+    }
+
     public LocalDate fecha(String nombre, String mensaje) throws ValidacionException {
         try {
             return LocalDate.parse(texto(nombre));

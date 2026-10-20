@@ -47,7 +47,10 @@
                         <td class="ps-4 text-body-tertiary">${i.count}</td>
                         <td class="fw-medium">${fn:escapeXml(p.cliente)}</td>
                         <td>${fn:escapeXml(p.mesero)}</td>
-                        <td>${fn:escapeXml(p.producto)}</td>
+                        <td>
+                            ${fn:escapeXml(p.producto)}
+                            <c:if test="${p.stockDescontado}"><i class="bi bi-box-arrow-down text-success ms-1" title="Insumos descontados del inventario"></i></c:if>
+                        </td>
                         <td>${p.cantidad}</td>
                         <td>${p.mesa}</td>
                         <td><span class="badge rounded-pill bg-${p.tono}-subtle text-${p.tono}-emphasis">${p.estado}</span></td>
@@ -103,8 +106,14 @@
                             <input class="form-control" id="mesero" name="mesero" placeholder="Nombre del mesero" maxlength="100" required>
                         </div>
                         <div class="col-12">
-                            <label for="producto" class="form-label">Producto</label>
-                            <input class="form-control" id="producto" name="producto" placeholder="Producto" maxlength="100" required>
+                            <label for="plato_id" class="form-label">Plato de la carta</label>
+                            <select class="form-select" id="plato_id" name="plato_id" required>
+                                <option value="">Elige un plato…</option>
+                                <c:forEach var="pl" items="${platos}">
+                                    <option value="${pl.id}">${fn:escapeXml(pl.nombre)} — S/ ${pl.precioTexto}</option>
+                                </c:forEach>
+                            </select>
+                            <div class="form-text">Al registrar, se descuentan del inventario los insumos de su receta.</div>
                         </div>
                         <div class="col-6">
                             <label for="cantidad" class="form-label">Cantidad</label>

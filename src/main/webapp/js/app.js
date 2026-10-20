@@ -31,6 +31,19 @@
                     form.elements[nombre].value = btn.dataset[clave];
                 }
             });
+            // Casillas: data-activo="true|false" marca o desmarca el checkbox "activo"
+            if (btn.dataset.activo && form.elements.activo) {
+                form.elements.activo.checked = btn.dataset.activo === 'true';
+            }
+            // Campos que solo aplican al crear (.solo-nuevo) o al editar (.solo-edicion)
+            var editando = btn.hasAttribute('data-campo-id') && !btn.hasAttribute('data-limpiar');
+            modal.querySelectorAll('.solo-nuevo').forEach(function (el) {
+                el.classList.toggle('d-none', editando);
+                el.querySelectorAll('input, select').forEach(function (i) { i.disabled = editando; });
+            });
+            modal.querySelectorAll('.solo-edicion').forEach(function (el) {
+                el.classList.toggle('d-none', !editando);
+            });
             if (btn.dataset.titulo) {
                 modal.querySelector('.modal-title').textContent = btn.dataset.titulo;
             }

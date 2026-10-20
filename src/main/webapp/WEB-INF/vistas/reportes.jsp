@@ -34,6 +34,60 @@
         <ui:stat etiqueta="Valor total" valor="S/ ${data.valorInventarioTexto}" icono="wallet2" tono="success"/>
     </div>
 
+    <h2 class="titulo-seccion mb-3">Consumo, mermas y compras (últimos 30 días)</h2>
+    <div class="row g-3 mb-4">
+        <ui:stat etiqueta="Consumo valorizado" valor="S/ ${data.consumo30Texto}" icono="graph-down-arrow" tono="primary"/>
+        <ui:stat etiqueta="Mermas" valor="S/ ${data.mermas30Texto}" icono="trash3" tono="danger"/>
+        <ui:stat etiqueta="Proyección compras 7 días (IA)" valor="S/ ${proyeccionCompras}" icono="stars" tono="info"/>
+        <ui:stat etiqueta="Alertas pendientes" valor="${data.alertasPendientes}" icono="bell" tono="warning"/>
+    </div>
+
+    <div class="row g-4 mb-4">
+        <div class="col-lg-6">
+            <div class="card h-100">
+                <div class="card-body">
+                    <h3 class="h5 fw-semibold mb-4">Insumos más consumidos (S/)</h3>
+                    <c:choose>
+                        <c:when test="${empty data.topConsumo}">
+                            <p class="text-body-tertiary mb-0">Aún no hay consumo registrado.</p>
+                        </c:when>
+                        <c:otherwise>
+                            <c:forEach var="t" items="${data.topConsumo}">
+                                <div class="mb-3">
+                                    <div class="d-flex justify-content-between small mb-1">
+                                        <span class="fw-medium">${fn:escapeXml(t.nombre)}</span>
+                                        <span class="text-body-secondary">S/ ${t.cantidad}</span>
+                                    </div>
+                                    <div class="progress progress-delgada rounded-pill" role="progressbar" aria-label="${fn:escapeXml(t.nombre)}"
+                                         aria-valuenow="${t.cantidad}" aria-valuemin="0" aria-valuemax="${data.maxTopConsumo}">
+                                        <div class="progress-bar bg-primary rounded-pill" style="width: ${t.cantidad * 100 / data.maxTopConsumo}%"></div>
+                                    </div>
+                                </div>
+                            </c:forEach>
+                        </c:otherwise>
+                    </c:choose>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-6">
+            <div class="card h-100">
+                <div class="card-body">
+                    <h3 class="h5 fw-semibold mb-3">Órdenes de compra por estado</h3>
+                    <ul class="list-group list-group-flush">
+                        <c:forEach var="o" items="${data.ordenesPorEstado}">
+                            <li class="list-group-item d-flex justify-content-between px-0">
+                                <span>${o.nombre}</span><span class="fw-bold">${o.cantidad}</span>
+                            </li>
+                        </c:forEach>
+                        <c:if test="${empty data.ordenesPorEstado}">
+                            <li class="list-group-item px-0 text-body-tertiary">Aún no hay órdenes.</li>
+                        </c:if>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <div class="row g-4">
         <div class="col-lg-6">
             <div class="card h-100">

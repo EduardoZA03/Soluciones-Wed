@@ -1,11 +1,17 @@
 # CalSoft — Sistema POS (versión Java)
 
-**CalSoft** es un sistema administrativo / punto de venta para restaurantes.
-Proyecto del curso **Calidad de Software**.
+**CalSoft** es un sistema administrativo / punto de venta para restaurantes,
+con **gestión de inventario con inteligencia artificial e interoperabilidad
+con proveedores** (caso: restaurante *La Crianza Arequipeña*).
+Curso **Soluciones Web y Aplicaciones Distribuidas**.
 
-Esta es la versión reescrita en **Java web** (Servlets + JSP + JSTL) con
-**PostgreSQL**, lista para abrir en **Apache NetBeans**. La versión original
-estaba en JavaScript (Node.js + Express en el backend y React en el frontend).
+Esta es la versión en **Java web** (Servlets + JSP + JSTL) con **PostgreSQL**,
+lista para abrir en **Apache NetBeans**. La versión original estaba en
+JavaScript (Node.js + Express en el backend y React en el frontend).
+
+> 📗 **Historias de usuario:** [docs/HISTORIAS_USUARIO.md](docs/HISTORIAS_USUARIO.md)
+> explica cómo se cumple cada HU (HU-01 a HU-09) y cómo probarla.
+> 🗂️ **Modelo de BD:** [docs/MODELO_BD.md](docs/MODELO_BD.md) (diagrama entidad-relación).
 
 > 📘 **¿Primera vez?** Sigue la guía paso a paso
 > **[INSTALACION.md](INSTALACION.md)**: programas necesarios, base de datos,
@@ -18,9 +24,12 @@ estaba en JavaScript (Node.js + Express en el backend y React en el frontend).
 | Capa       | Tecnología                                         |
 |------------|----------------------------------------------------|
 | Vistas     | JSP + JSTL, **Bootstrap 5.3** + Bootstrap Icons (WebJars, sin CDN) |
-| Lógica     | Servlets (Jakarta EE 10), patrón MVC + DAO         |
+| Lógica     | Servlets (Jakarta EE 10), patrón MVC + DAO + capa de servicios con transacciones |
 | Datos      | PostgreSQL vía JDBC (consultas parametrizadas)     |
-| Seguridad  | Contraseñas con **BCrypt**, sesión HTTP + filtro, token CSRF |
+| IA         | Pronóstico de consumo: suavizado exponencial con estacionalidad semanal |
+| Interoperabilidad | API REST JSON con proveedores (`java.net.http` + **Gson**) |
+| QR         | Generación con **ZXing**, lectura con cámara (**html5-qrcode**) o lectora USB |
+| Seguridad  | Contraseñas con **BCrypt**, sesión HTTP + filtro, permisos por rol, token CSRF |
 | Build      | Maven (proyecto `war`)                             |
 | Servidor   | Apache Tomcat 10.1 o superior                      |
 
@@ -33,12 +42,18 @@ CalSoft-Java/
     ├── java/com/calsoft/
     │   ├── config/      Conexion.java         → conexión JDBC (lee db.properties)
     │   │                InicializadorBD.java  → crea BD, tablas y datos demo al arrancar
-    │   ├── modelo/      Usuario, Pedido, Reserva, Producto, Resumen, Conteo
-    │   ├── dao/         UsuarioDAO, PedidoDAO, ReservaDAO, InventarioDAO, ReporteDAO
-    │   ├── controlador/ Servlets: Login, Logout, Dashboard, Pedido, Reserva,
-    │   │                Inventario, Usuario, Cocina, Reporte (+ ServletBase)
-    │   ├── filtro/      AutenticacionFiltro.java → protege páginas y valida CSRF
-    │   └── util/        Formulario.java (validación), ValidacionException
+    │   │                Transaccion.java      → varias consultas en una sola transacción
+    │   ├── modelo/      Usuario, Pedido, Reserva, Producto (insumo), Plato, RecetaItem,
+    │   │                Movimiento, Alerta, Proveedor, OrdenCompra, OrdenItem,
+    │   │                OrdenEvento, Prediccion, Resumen, Conteo
+    │   ├── dao/         Un DAO por tabla: consultas SQL
+    │   ├── servicio/    InventarioService (descuento por receta, movimientos),
+    │   │                OrdenService (ciclo de la orden), PrediccionService (IA)
+    │   ├── integracion/ ProveedorApiCliente + JSON de solicitud y respuesta
+    │   ├── api/         ProveedorSimuladoServlet → API REST que imita a un proveedor
+    │   ├── controlador/ Un servlet por pantalla (+ ServletBase, QrServlet)
+    │   ├── filtro/      AutenticacionFiltro.java → sesión, permisos por rol y CSRF
+    │   └── util/        Permisos (rol → módulos), Formulario (validación)
     ├── resources/
     │   ├── db.properties.example → plantilla; cópiala como db.properties  ← AJUSTAR
     │   └── schema.sql     → esquema de la base de datos
@@ -49,7 +64,11 @@ CalSoft-Java/
         ├── WEB-INF/tags/     → componentes JSP reutilizables (stat.tag)
         ├── css/estilos.css   → colores de la marca sobre Bootstrap
         ├── js/app.js         → comportamiento de la interfaz (modales, confirmaciones)
+        ├── js/recepcion.js   → lector de QR con la cámara
         └── img/logo.png
+docs/
+├── HISTORIAS_USUARIO.md → HU-01 a HU-09: dónde están y cómo probarlas
+└── MODELO_BD.md         → diagrama entidad-relación
 ```
 
 ### Separación por capas
@@ -66,8 +85,8 @@ Cada cosa vive en su propia carpeta y no se mezclan:
 | **Imágenes** | `src/main/webapp/img` | Logo e imágenes |
 
 Las JSP no tienen bloques `<style>` ni `<script>` propios: los estilos van en
-`estilos.css` y el JS en `app.js`. La única excepción es el ancho de las barras
-de Reportes, que Bootstrap define con `style="width: …%"`.
+`estilos.css` y el JS en `app.js` / `recepcion.js`. La única excepción es el
+ancho de las barras de Reportes, que Bootstrap define con `style="width: …%"`.
 
 | Proyecto original (JS)               | Equivalente en Java                         |
 |--------------------------------------|---------------------------------------------|
@@ -106,8 +125,10 @@ db.password=TU_CLAVE
 ```
 
 No hace falta crear nada a mano: al arrancar, la aplicación **crea la base
-`restaurante`** si no existe, aplica `schema.sql` y siembra el usuario admin
-y los datos demo (solo si las tablas están vacías).
+`restaurante`** si no existe, aplica `schema.sql` (también actualiza bases de
+la versión anterior sin perder datos) y siembra el usuario admin y los datos
+demo: insumos, proveedores, carta con recetas y 8 semanas de consumo histórico
+para la IA (solo si las tablas están vacías).
 
 ### 2. Abrir el proyecto
 
@@ -135,20 +156,46 @@ elige el Tomcat registrado. Se abrirá:
 
 ## Módulos
 
-| Módulo     | Ruta          | Descripción                                                       |
-|------------|---------------|-------------------------------------------------------------------|
-| Inicio     | `/dashboard`  | Resumen, pedidos recientes y próximas reservas.                   |
-| Pedidos    | `/pedidos`    | Registro, cambio de estado, filtro por mesero y resumen.          |
-| Reservas   | `/reservas`   | Reservas con fecha/hora, personas y estado.                       |
-| Inventario | `/inventario` | Productos, stock, precio y alerta de bajo stock.                  |
-| Cocina     | `/cocina`     | Pedidos activos; se recarga cada 10 s.                            |
-| Usuarios   | `/usuarios`   | Alta (clave hasheada), cambio de rol, reseteo de clave.           |
-| Reportes   | `/reportes`   | Agregados de pedidos, reservas, inventario y usuarios.            |
+| Módulo | Ruta | Descripción | HU |
+|--------|------|-------------|----|
+| Inicio | `/dashboard` | Resumen, alertas, órdenes en curso, pedidos y reservas. | — |
+| Pedidos (POS) | `/pedidos` | Venta de platos de la carta; descuenta insumos por receta. | HU-03 |
+| Cocina | `/cocina` | Pedidos activos; se recarga cada 10 s. | — |
+| Reservas | `/reservas` | Reservas con fecha/hora, personas y estado. | — |
+| Insumos | `/inventario` | Stock, vencimiento, proveedor; búsqueda, filtros y movimientos. | HU-02 |
+| Carta y recetas | `/carta` | Platos y cantidad de cada insumo por porción. | HU-03 |
+| Alertas | `/alertas` | Stock mínimo y vencimiento; marcar atendida o generar orden. | HU-04, HU-06 |
+| Predicción IA | `/prediccion` | Consumo estimado, cantidad sugerida, aceptar/ajustar. | HU-05 |
+| Kardex | `/movimientos` | Historial de entradas, salidas, mermas y ajustes. | HU-02 |
+| Órdenes de compra | `/compras` | Borrador → aprobación → envío por API → confirmación; línea de tiempo y QR. | HU-06, HU-07, HU-09 |
+| Recepción | `/recepcion` | Lectura del QR / código de barras y validación de cantidades. | HU-08 |
+| Proveedores | `/proveedores` | Contacto, URL y API key de cada proveedor. | HU-07 |
+| Usuarios | `/usuarios` | Alta (clave hasheada), cambio de rol, reseteo de clave. | HU-01 |
+| Reportes | `/reportes` | Pedidos, reservas, inventario, consumo, mermas y proyección de compras. | — |
+
+### Roles (HU-01)
+
+| Rol | Módulos |
+|-----|---------|
+| Administrador | Todos. Es el único que aprueba órdenes de compra. |
+| Almacén | Insumos, Alertas, Kardex, Órdenes de compra (borradores), Recepción |
+| Cocina | Cocina, Insumos, Carta y recetas |
+| Mesero / Empleado | Pedidos (POS), Reservas |
+
+Los permisos están en un solo lugar: [`util/Permisos.java`](src/main/java/com/calsoft/util/Permisos.java).
+
+### API del proveedor simulado
+
+`POST /CalSoft/api/proveedor/ordenes` con la cabecera `X-Api-Key` (las claves
+de demostración están en la tabla `proveedores`). El formato JSON y las reglas
+están en [docs/HISTORIAS_USUARIO.md](docs/HISTORIAS_USUARIO.md#proveedor-simulado-api).
 
 ## Seguridad
 
 - Contraseñas guardadas con **BCrypt** (nunca en texto plano).
 - Todas las páginas, salvo el login, exigen sesión iniciada (`AutenticacionFiltro`).
+- Cada rol solo entra a sus módulos; el menú oculta el resto.
+- La API del proveedor se autentica con API key (no usa la sesión).
 - Al iniciar sesión se crea una sesión nueva (evita fijación de sesión).
 - Cada formulario lleva un **token CSRF** que el filtro verifica.
 - Consultas SQL siempre con `PreparedStatement` (sin inyección SQL).

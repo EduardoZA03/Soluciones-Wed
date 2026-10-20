@@ -17,11 +17,12 @@
     <ui:stat etiqueta="Reservas pendientes" icono="calendar-week" tono="warning"
              valor="${empty stats ? '—' : stats.reservasPendientes}"
              sub="${empty stats ? '' : stats.reservasConfirmadas += ' confirmadas'}"/>
-    <ui:stat etiqueta="Bajo stock" icono="exclamation-triangle" tono="danger"
-             valor="${empty stats ? '—' : stats.bajoStock}"
-             sub="${empty stats ? '' : stats.productosTotal += ' productos'}"/>
-    <ui:stat etiqueta="Valor inventario" icono="wallet2" tono="success"
-             valor="${empty stats ? '—' : 'S/ ' += stats.valorInventarioEntero}"/>
+    <ui:stat etiqueta="Alertas pendientes" icono="bell" tono="danger"
+             valor="${empty stats ? '—' : stats.alertasPendientes}"
+             sub="${empty stats ? '' : stats.bajoStock += ' insumos en stock mínimo'}"/>
+    <ui:stat etiqueta="Órdenes en curso" icono="truck" tono="success"
+             valor="${empty stats ? '—' : stats.ordenesEnCurso}"
+             sub="${empty stats ? '' : 'Inventario: S/ ' += stats.valorInventarioEntero}"/>
 </div>
 
 <div class="row g-4">

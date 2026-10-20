@@ -14,6 +14,25 @@ public class Pedido {
     private int cantidad;
     private int mesa;
     private String estado;
+    private Integer platoId;
+    private boolean stockDescontado;
+
+    public Integer getPlatoId() {
+        return platoId;
+    }
+
+    public void setPlatoId(Integer platoId) {
+        this.platoId = platoId;
+    }
+
+    /** true si este pedido ya descontó sus insumos del inventario (HU-03). */
+    public boolean isStockDescontado() {
+        return stockDescontado;
+    }
+
+    public void setStockDescontado(boolean stockDescontado) {
+        this.stockDescontado = stockDescontado;
+    }
 
     /** Estado al que pasa el pedido con el botón "Cambiar" (ciclo Pendiente → En cocina → Entregado). */
     public static String siguienteEstado(String estado) {
