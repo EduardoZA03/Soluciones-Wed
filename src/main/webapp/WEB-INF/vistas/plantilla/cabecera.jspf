@@ -1,0 +1,76 @@
+<%--
+    Cabecera común de las páginas privadas: <head>, barra lateral y mensajes flash.
+    Antes de incluirla, la página define:  titulo  y  activo  (clave del menú).
+--%>
+<%@ taglib prefix="c" uri="jakarta.tags.core" %>
+<%@ taglib prefix="fn" uri="jakarta.tags.functions" %>
+<c:set var="ctx" value="${pageContext.request.contextPath}"/>
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>${titulo} · CalSoft</title>
+    <link rel="icon" href="${ctx}/img/logo.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@500;600;700;800&family=Caveat:wght@600;700&display=swap">
+    <link rel="stylesheet" href="${ctx}/css/estilos.css">
+    <script src="https://unpkg.com/lucide@0.344.0/dist/umd/lucide.min.js" defer></script>
+    <script src="${ctx}/js/app.js" defer></script>
+</head>
+<body>
+
+<header class="topbar">
+    <div class="marca">
+        <img src="${ctx}/img/logo.png" alt="">
+        <span class="marca-nombre">CalSoft</span>
+    </div>
+    <button type="button" class="btn-icono" data-menu aria-label="Abrir menú"><i data-lucide="menu"></i></button>
+</header>
+<div class="fondo-menu" data-menu></div>
+
+<aside class="sidebar">
+    <div class="marca">
+        <img src="${ctx}/img/logo.png" alt="CalSoft">
+        <div>
+            <div class="marca-nombre">CalSoft</div>
+            <div class="marca-sub">Sistema POS</div>
+        </div>
+    </div>
+
+    <nav class="nav">
+        <a href="${ctx}/dashboard" class="${activo == 'dashboard' ? 'activo' : ''}"><i data-lucide="layout-dashboard"></i>Inicio</a>
+        <a href="${ctx}/pedidos" class="${activo == 'pedidos' ? 'activo' : ''}"><i data-lucide="clipboard-list"></i>Pedidos</a>
+        <a href="${ctx}/reservas" class="${activo == 'reservas' ? 'activo' : ''}"><i data-lucide="calendar"></i>Reservas</a>
+        <a href="${ctx}/inventario" class="${activo == 'inventario' ? 'activo' : ''}"><i data-lucide="package"></i>Inventario</a>
+        <a href="${ctx}/cocina" class="${activo == 'cocina' ? 'activo' : ''}"><i data-lucide="chef-hat"></i>Cocina</a>
+        <a href="${ctx}/usuarios" class="${activo == 'usuarios' ? 'activo' : ''}"><i data-lucide="users"></i>Usuarios</a>
+        <a href="${ctx}/reportes" class="${activo == 'reportes' ? 'activo' : ''}"><i data-lucide="bar-chart-3"></i>Reportes</a>
+    </nav>
+
+    <div class="tarjeta-usuario">
+        <div class="fila">
+            <div class="avatar">${fn:escapeXml(fn:toUpperCase(fn:substring(sessionScope.usuario.usuario, 0, 1)))}</div>
+            <div class="datos">
+                <div class="nombre">${fn:escapeXml(sessionScope.usuario.usuario)}</div>
+                <div class="rol">${fn:escapeXml(sessionScope.usuario.rol)}</div>
+            </div>
+            <form method="post" action="${ctx}/logout">
+                <input type="hidden" name="csrf" value="${sessionScope.csrf}">
+                <button type="submit" class="btn-icono" title="Cerrar sesión" aria-label="Cerrar sesión"><i data-lucide="log-out"></i></button>
+            </form>
+        </div>
+    </div>
+</aside>
+
+<main class="contenido">
+<div class="contenedor">
+
+<c:if test="${not empty sessionScope.flashError}">
+    <div class="alerta alerta-error">${fn:escapeXml(sessionScope.flashError)}</div>
+    <c:remove var="flashError" scope="session"/>
+</c:if>
+<c:if test="${not empty sessionScope.flashExito}">
+    <div class="alerta alerta-exito">${fn:escapeXml(sessionScope.flashExito)}</div>
+    <c:remove var="flashExito" scope="session"/>
+</c:if>

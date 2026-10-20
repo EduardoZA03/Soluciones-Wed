@@ -1,0 +1,11 @@
+target/
+nbproject/private/
+nb-configuration.xml
+nbactions.xml
+*.class
+*.log
+.idea/
+.vscode/
+
+# Configuración local con la clave real de PostgreSQL (no se sube a git)
+src/main/resources/db.properties
